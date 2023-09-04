@@ -1,0 +1,47 @@
+version: "3"
+
+services:
+  app:
+    container_name: code-judge-backend
+    image: code-judge-backend
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    env_file: .env.docker
+    depends_on:
+      - database
+      - rabbitmq
+    restart: always
+  worker:
+    container_name: code-judge-worker
+    image: code-judge-worker
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: pnpm run start:prod:worker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  database:
+    container_name: database
+    image: mariadb:11
+    ports:
+      - 3306:3306
+    volumes:
+      - ./volumes/database/conf.d:/etc/mysql/conf.d
+      - ./volumes/database/data:/var/lib/mysql
+      - ./volumes/database/initdb.d:/docker-entrypoint-initdb.d
+    env_file: .env
+    environment:
+      TZ: UTC
+    restart: always
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    volumes: 
+      - ./volumes/rabbitmq/data/:/var/lib/rabbitmq/ 
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file: .env

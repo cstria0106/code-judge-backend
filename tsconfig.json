@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2020",
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "plugins": [
+      {
+        "transform": "@nestia/core/lib/transform",
+        "validate": "assertEquals",
+        "stringify": "assert"
+      },
+      {
+        "transform": "typia/lib/transform"
+      }
+    ]
+  },
+  "include": ["src/**/*.ts"],
+  "files": ["src/override-modules.d.ts"],
+  "exclude": ["node_modules", "dist"],
+  "ts-node": {
+    "files": true
+  }
+}

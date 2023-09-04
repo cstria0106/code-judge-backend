@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  ADMIN
+}
+
+model User {
+  id                   String  @id
+  password             Bytes
+  salt                 Bytes
+  name                 String
+  shouldChangePassword Boolean
+
+  role UserRole @default(STUDENT)
+
+  submits Submit[]
+}
+
+model Submit {
+  id String @id @default(uuid())
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  problemId BigInt
+
+  language String
+  code     String @db.LongText
+
+  status Json
+
+  time   Float?
+  memory Int?
+
+  createdAt DateTime @default(now())
+}
+
+model Problem {
+  id BigInt @id @default(autoincrement())
+
+  name        String
+  description String @db.MediumText
+
+  templates Json
+  artifacts Json
+
+  startTime DateTime?
+  endTime   DateTime?
+
+  submits Submit[]
+}

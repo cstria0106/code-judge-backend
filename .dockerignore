@@ -1,0 +1,12 @@
+/.tmp
+/.vscode
+/dist
+/dockerfiles
+/node_modules
+/packages
+/volumes
+/.env*
+/.gitignore
+/.prettierrc
+/docker-compose.yml
+/README.md
