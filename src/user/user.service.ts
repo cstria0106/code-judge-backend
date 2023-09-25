@@ -4,7 +4,7 @@ import { CryptoService } from '../crypto/crypto.service';
 import { UserRepository } from './user.repository';
 
 export module UserService {
-  export module Get {
+  export module get {
     export type Result = {
       id: string;
       name: string;
@@ -13,7 +13,7 @@ export module UserService {
     };
   }
 
-  export module Create {
+  export module manageCreate {
     export type Data = {
       name: string;
       id: string;
@@ -23,7 +23,29 @@ export module UserService {
     };
   }
 
-  export module Update {
+  export module manageCreateMany {
+    export type Data = {
+      users: {
+        name: string;
+        id: string;
+        password: string;
+        shouldChangePassword: boolean;
+        role: 'STUDENT' | 'ADMIN';
+      }[]
+    }
+  }
+
+  export module manageList {
+    export type Result = {
+      users: {
+        id: string;
+        name: string;
+        role: 'STUDENT' | 'ADMIN'
+      }[]
+    }
+  }
+
+  export module update {
     export type Data = {
       password?: string;
     };
@@ -35,14 +57,14 @@ export class UserService {
   constructor(
     private readonly crypto: CryptoService,
     private readonly users: UserRepository,
-  ) {}
+  ) { }
 
-  async get(userId: string): Promise<UserService.Get.Result> {
+  async get(userId: string): Promise<UserService.get.Result> {
     const user = await this.users.findOneOrThrow({ id: userId });
     return user;
   }
 
-  async create(data: UserService.Create.Data): Promise<void> {
+  async manageCreate(data: UserService.manageCreate.Data): Promise<void> {
     const { name, id, shouldChangePassword, role } = data;
     const [encryptedPassword, salt] = await this.crypto.encrypt(data.password);
 
@@ -56,6 +78,28 @@ export class UserService {
     });
   }
 
+  async manageCreateMany(data: UserService.manageCreateMany.Data): Promise<void> {
+    await this.users.createMany({
+      users: await Promise.all(data.users.map(async user => {
+        const { name, id, shouldChangePassword, role } = user;
+        const [encryptedPassword, salt] = await this.crypto.encrypt(user.password);
+
+        return {
+          name, id, password: encryptedPassword, salt, shouldChangePassword, role
+        };
+      }))
+    });
+  }
+
+  async manageList(cursor?: string): Promise<UserService.manageList.Result> {
+    return {
+      users: await this.users.findMany({
+        cursor: cursor ? { id: cursor } : undefined,
+        take: 100
+      })
+    }
+  }
+
   private validatePassword(password: string) {
     if (password.length < 8) {
       throw new BadRequestException(
@@ -64,7 +108,7 @@ export class UserService {
     }
   }
 
-  async update(userId: string, data: UserService.Update.Data): Promise<void> {
+  async update(userId: string, data: UserService.update.Data): Promise<void> {
     const user = await this.users.findOneOrThrow({ id: userId });
 
     const { password } = data;
@@ -83,5 +127,10 @@ export class UserService {
         },
       );
     }
+  }
+
+  async destroy(userId: string): Promise<void> {
+    const user = await this.users.findOneOrThrow({ id: userId });
+    await this.users.delete({ id: user.id })
   }
 }

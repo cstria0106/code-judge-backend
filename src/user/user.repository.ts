@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { ensure } from '../util/ensure';
+import { StringChainable } from 'ts-pattern/dist/types/Pattern';
 
 export module UserRepository {
   export type Criteria = {
@@ -19,6 +20,21 @@ export module UserRepository {
     };
   }
 
+  export module findMany {
+    export type User = {
+      name: string;
+      id: string;
+      role: 'STUDENT' | 'ADMIN'
+    }
+
+    export type Options = {
+      cursor?: {
+        id: string;
+      };
+      take?: number;
+    };
+  }
+
   export module createOne {
     export type Data = {
       name: string;
@@ -28,6 +44,19 @@ export module UserRepository {
       shouldChangePassword: boolean;
       role: 'STUDENT' | 'ADMIN';
     };
+  }
+
+  export module createMany {
+    export type Data = {
+      users: {
+        name: string;
+        id: string;
+        password: Buffer,
+        salt: Buffer;
+        shouldChangePassword: boolean;
+        role: 'STUDENT' | 'ADMIN';
+      }[]
+    }
   }
 
   export module update {
@@ -43,7 +72,7 @@ export module UserRepository {
 
 @Injectable()
 export class UserRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async findOne(
     criteria: UserRepository.Criteria,
@@ -59,10 +88,32 @@ export class UserRepository {
     return this.findOne(criteria).then(ensure('User'));
   }
 
+  async findMany(options: UserRepository.findMany.Options): Promise<UserRepository.findMany.User[]> {
+    return this.prisma.user.findMany({
+      orderBy: {
+        id: 'asc'
+      },
+      skip: options.cursor !== undefined ? 1 : 0,
+      cursor: options.cursor ? {
+        id: options.cursor.id,
+      } : undefined,
+      take: options.take,
+      select: {
+        id: true,
+        name: true,
+        role: true,
+      }
+    })
+  }
+
   async createOne(data: UserRepository.createOne.Data): Promise<void> {
     await this.prisma.user.create({
       data,
     });
+  }
+
+  async createMany(data: UserRepository.createMany.Data): Promise<void> {
+    await this.prisma.user.createMany({ data: data.users })
   }
 
   async update(
@@ -75,12 +126,16 @@ export class UserRepository {
       data: {
         ...(password !== undefined
           ? {
-              password: password.encrypted,
-              salt: password.salt,
-            }
+            password: password.encrypted,
+            salt: password.salt,
+          }
           : undefined),
         ...rest,
       },
     });
+  }
+
+  async delete(criteria: UserRepository.Criteria): Promise<void> {
+    await this.prisma.user.delete({ where: criteria })
   }
 }

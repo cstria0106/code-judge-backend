@@ -27,7 +27,7 @@ export class UserCreateCommand extends CommandRunner {
       isRandomPassword = true;
     }
 
-    this.user.create({ name, id, password, shouldChangePassword: true, role });
+    this.user.manageCreate({ name, id, password, shouldChangePassword: true, role });
     this.logger.log('User registered!');
 
     if (isRandomPassword) {
