@@ -37,6 +37,7 @@ export module ProblemRepository {
       startTime: Date | null;
       endTime: Date | null;
       templates: Templates;
+      artifacts: Artifacts;
     };
   }
 
@@ -142,6 +143,7 @@ export class ProblemRepository {
           startTime: true,
           endTime: true,
           templates: true,
+          artifacts: true,
         },
       })
       .then((problem) =>
@@ -149,6 +151,7 @@ export class ProblemRepository {
           ? {
               ...problem,
               templates: typia.assert<Templates>(problem.templates),
+              artifacts: typia.assert<Artifacts>(problem.artifacts),
             }
           : problem,
       );
@@ -158,26 +161,6 @@ export class ProblemRepository {
     criteria: ProblemRepository.Criteria,
   ): Promise<ProblemRepository.findOne.Problem> {
     return this.findOne(criteria).then(ensure('Problem'));
-  }
-
-  async findOneWithArtifacts(
-    id: bigint,
-  ): Promise<ProblemRepository.findOneWithArtifacts.Problem | null> {
-    return this.prisma.problem.findFirst({ where: { id } }).then((problem) =>
-      problem !== null
-        ? {
-            ...problem,
-            artifacts: typia.assert<Artifacts>(problem.artifacts),
-            templates: typia.assert<Templates>(problem.templates),
-          }
-        : problem,
-    );
-  }
-
-  async findOneWithArtifactsOrThrow(
-    id: bigint,
-  ): Promise<ProblemRepository.findOneWithArtifacts.Problem> {
-    return this.findOneWithArtifacts(id).then(ensure('Problem'));
   }
 
   async create(

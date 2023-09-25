@@ -3,6 +3,8 @@ import hljs, { Language } from 'highlight.js';
 import { Marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 
+import { FileRepository } from '../storage/file.repository';
+import { StorageService } from '../storage/storage.service';
 import { Artifacts } from './artifacts';
 import { exampleTemplate } from './example-template';
 import { ProblemRepository } from './problem.repository';
@@ -99,10 +101,16 @@ export module ProblemService {
   }
 }
 
+const keys = <T extends object>(obj: T) => Object.keys(obj) as Array<keyof T>;
+
 @Injectable()
 export class ProblemService {
   private marked: Marked;
-  constructor(private readonly problems: ProblemRepository) {
+  constructor(
+    private readonly problems: ProblemRepository,
+    private readonly storage: StorageService,
+    private readonly files: FileRepository,
+  ) {
     this.marked = new Marked(
       markedHighlight({
         langPrefix: 'hljs language-',
@@ -161,7 +169,7 @@ export class ProblemService {
   }
 
   async manageGet(id: bigint): Promise<ProblemService.manageGet.Result> {
-    const problem = await this.problems.findOneWithArtifactsOrThrow(id);
+    const problem = await this.problems.findOneOrThrow({ id });
 
     return { problem };
   }
@@ -173,8 +181,8 @@ export class ProblemService {
         '# Hello, world!\nThis is new problem.\n\nPlease refer to the [Markdown Cheat Sheet](https://www.markdownguide.org/cheat-sheet/) to help you write new question.',
       artifacts: {
         inputs: {
-          public: '',
-          hidden: '',
+          public: null,
+          hidden: null,
         },
       },
       templates: exampleTemplate,
@@ -187,12 +195,45 @@ export class ProblemService {
     problemId: bigint,
     data: ProblemService.manageUpdate.Data,
   ): Promise<void> {
-    const problem = await this.problems.findOneOrThrow({ id: problemId });
+    const problem = await this.problems.findOneOrThrow({
+      id: problemId,
+    });
+
+    const inputsToDelete: ('public' | 'hidden')[] = [];
+
+    // Check artifacts uploaded
+    if (data.artifacts) {
+      // Inputs
+      for (const name of keys(data.artifacts.inputs)) {
+        const id = data.artifacts.inputs[name];
+        if (id !== null) {
+          await this.files.findOneOrThrow({ id });
+          inputsToDelete.push(name);
+        }
+      }
+    }
+
     await this.problems.update(problem.id, data);
+
+    // Delete previous artifacts
+    for (const name of inputsToDelete) {
+      const id = problem.artifacts.inputs[name];
+      if (id !== null) {
+        await this.storage.destroy(id);
+      }
+    }
   }
 
   async manageDestroy(problemId: bigint): Promise<void> {
     const problem = await this.problems.findOneOrThrow({ id: problemId });
     await this.problems.delete(problem.id);
+
+    // Delete artifacts
+    for (const name of keys(problem.artifacts.inputs)) {
+      const id = problem.artifacts.inputs[name];
+      if (id !== null) {
+        await this.storage.destroy(id);
+      }
+    }
   }
 }

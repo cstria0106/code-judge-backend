@@ -1,29 +1,22 @@
-import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Docker from 'dockerode';
-import { createReadStream } from 'fs';
 import fs from 'fs/promises';
 import MemoryStream from 'memorystream';
 import { mkdirp } from 'mkdirp';
 import PQueue from 'p-queue-compat';
 import path from 'path';
-import replaceStream from 'replacestream';
 import tar from 'tar';
-import { setTimeout } from 'timers/promises';
-import { match } from 'ts-pattern';
 import typia from 'typia';
 
 import { languages } from '../language/languages';
 import { Language } from '../problem/template';
-import { streamToString as streamToBuffer } from '../util/stream-to-buffer';
 import { CompileResult } from './result';
 
 @Injectable()
 export class CompilerService {
   private readonly docker: Docker;
   private readonly queue: PQueue;
-
-  private readonly logger: Logger = new Logger(CompilerService.name);
 
   private readonly memoryLimit: number | undefined;
   private readonly cpuCount: number | undefined;
@@ -45,33 +38,25 @@ export class CompilerService {
       cpuCountConfig !== undefined ? Number(cpuCountConfig) : undefined;
   }
 
-  enqueue(
+  /**
+   * Enqueues to compile queue.
+   * Returns when compilation is complete.
+   * @param onStarted Called when the queue entry is started to handling
+   */
+  async enqueue(
     submitId: string,
     language: Language,
     judgeCode: string,
     solutionCode: string,
     onStarted: () => void,
-    onComplete: (result: CompileResult) => void,
-    onError: (e: any) => void,
   ) {
-    this.queue.add(async () => {
-      onStarted();
-      let result: CompileResult;
-      try {
-        result = await this.compile(
-          submitId,
-          language,
-          judgeCode,
-          solutionCode,
-        );
-      } catch (e) {
-        this.logger.error(e);
-        onError(e);
-        return;
-      }
-
-      onComplete(result);
-    });
+    return this.queue.add(
+      async () => {
+        onStarted();
+        return this.compile(submitId, language, judgeCode, solutionCode);
+      },
+      { throwOnTimeout: true },
+    );
   }
 
   private async compile(

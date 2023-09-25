@@ -44,18 +44,16 @@ export class JudgeService {
     submitId: string,
     language: Language,
     files: Record<string, string>,
-    input: Buffer,
+    input: Readable,
     timeLimit: number,
     onStarted: () => void,
     onProgress: (progress: number) => void,
-    onComplete: (result: JudgeResult) => void,
-    onError: (e: any) => void,
   ) {
-    this.queue.add(async () => {
-      onStarted();
-      let result: JudgeResult;
-      try {
-        result = await this.judge(
+    return this.queue.add(
+      async () => {
+        onStarted();
+
+        return this.judge(
           submitId,
           language,
           files,
@@ -63,21 +61,16 @@ export class JudgeService {
           timeLimit,
           onProgress,
         );
-      } catch (e) {
-        this.logger.error(e);
-        onError(e);
-        return;
-      }
-
-      onComplete(result);
-    });
+      },
+      { throwOnTimeout: true },
+    );
   }
 
   private async judge(
     submitId: string,
     language: Language,
     files: Record<string, string>,
-    input: Buffer,
+    input: Readable,
     timeLimit: number,
     onProgress: (progress: number) => void,
   ): Promise<JudgeResult> {
@@ -231,7 +224,7 @@ export class JudgeService {
     container.modem.demuxStream(stream, output, output); // Container stdout, stderr => Output stream
     stream.on('close', () => output.end());
 
-    Readable.from(input).pipe(stream); // Input string => Container stdin
+    input.pipe(stream); // Input string => Container stdin
 
     // Start container
     await container.start();

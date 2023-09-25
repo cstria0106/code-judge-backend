@@ -21,7 +21,8 @@ model User {
 
   role UserRole @default(STUDENT)
 
-  submits Submit[]
+  submits       Submit[]
+  uploadedFiles File[]
 }
 
 model Submit {
@@ -57,4 +58,12 @@ model Problem {
   endTime   DateTime?
 
   submits Submit[]
+}
+
+model File {
+  id         String @id
+  filename   String
+  size       Int
+  uploader   User   @relation(fields: [uploaderId], references: [id])
+  uploaderId String
 }
