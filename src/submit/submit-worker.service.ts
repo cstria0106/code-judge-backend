@@ -144,6 +144,7 @@ export class SubmitWorkerService {
         })
         .exhaustive();
     } catch (e) {
+      this.logger.error(e);
       await this.updateStatus(submit.id, SubmitStatus.unknownError());
     }
   }

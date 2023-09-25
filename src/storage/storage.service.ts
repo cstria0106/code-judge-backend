@@ -40,7 +40,7 @@ export class StorageService implements OnModuleInit {
   }
 
   async upload(
-    file: Readable,
+    file: Buffer,
     filename: string,
     size: number,
     uploaderId: string,

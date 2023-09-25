@@ -208,20 +208,11 @@ export class ProblemService {
         const id = data.artifacts.inputs[name];
         if (id !== null) {
           await this.files.findOneOrThrow({ id });
-          inputsToDelete.push(name);
         }
       }
     }
 
     await this.problems.update(problem.id, data);
-
-    // Delete previous artifacts
-    for (const name of inputsToDelete) {
-      const id = problem.artifacts.inputs[name];
-      if (id !== null) {
-        await this.storage.destroy(id);
-      }
-    }
   }
 
   async manageDestroy(problemId: bigint): Promise<void> {
@@ -232,7 +223,9 @@ export class ProblemService {
     for (const name of keys(problem.artifacts.inputs)) {
       const id = problem.artifacts.inputs[name];
       if (id !== null) {
-        await this.storage.destroy(id);
+        try {
+          await this.storage.destroy(id);
+        } catch (e) {}
       }
     }
   }

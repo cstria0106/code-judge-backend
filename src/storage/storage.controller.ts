@@ -1,6 +1,13 @@
-import { TypedBody, TypedRoute } from '@nestia/core';
-import { Controller, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Head,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import typia from 'typia';
 
 import { JwtPayload } from '../jwt/jwt.service';
 import { Roles } from '../jwt/roles.decorator';
@@ -12,6 +19,10 @@ export module StorageController {
     export type Body = {
       keyPrefix?: string;
     };
+
+    export type Response = {
+      id: string;
+    };
   }
 }
 
@@ -21,18 +32,21 @@ export class StorageController {
 
   @Roles(['ADMIN'])
   @UseInterceptors(FileInterceptor('file'))
-  @TypedRoute.Post()
+  @Post()
   async upload(
     @User() user: JwtPayload,
     @UploadedFile('file') file: Express.Multer.File,
-    @TypedBody() body: StorageController.upload.Body,
-  ): Promise<void> {
-    await this.storage.upload(
-      file.stream,
-      file.filename,
+    @Body() body: StorageController.upload.Body,
+  ): Promise<StorageController.upload.Response> {
+    typia.assert(body);
+
+    const id = await this.storage.upload(
+      file.buffer,
+      file.originalname,
       file.size,
       user.id,
       body.keyPrefix,
     );
+    return { id };
   }
 }
