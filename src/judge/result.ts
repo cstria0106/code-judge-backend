@@ -1,4 +1,4 @@
-export type JudgeResult =
+export type JudgeResult = (
   | {
       type: 'SUCCESS';
       time: number;
@@ -11,4 +11,7 @@ export type JudgeResult =
         | 'TIME_LIMIT_EXCEED'
         | 'MEMORY_LIMIT_EXCEED'
         | 'RUNTIME_ERROR';
-    };
+    }
+) & {
+  debugText: string;
+};

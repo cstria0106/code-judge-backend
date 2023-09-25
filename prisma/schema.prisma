@@ -37,7 +37,8 @@ model Submit {
   language String
   code     String @db.LongText
 
-  status Json
+  status    Json
+  debugText String @default("") @db.MediumText
 
   time   Float?
   memory Int?

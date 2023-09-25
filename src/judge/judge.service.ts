@@ -257,6 +257,7 @@ export class JudgeService {
           return {
             type: 'FAILED',
             reason: 'TIME_LIMIT_EXCEED',
+            debugText,
           } satisfies JudgeResult;
         })
         // Runtime error
@@ -264,6 +265,7 @@ export class JudgeService {
           return {
             type: 'FAILED',
             reason: 'RUNTIME_ERROR',
+            debugText,
           } satisfies JudgeResult;
         })
         // Success
@@ -274,6 +276,7 @@ export class JudgeService {
               type: 'SUCCESS',
               time: result.time,
               memory: result.memory,
+              debugText,
             }) satisfies JudgeResult,
         )
         // Failed
@@ -283,6 +286,7 @@ export class JudgeService {
             ({
               type: 'FAILED',
               reason: 'WRONG',
+              debugText,
             }) satisfies JudgeResult,
         )
         .exhaustive()

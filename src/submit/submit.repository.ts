@@ -11,6 +11,7 @@ export module SubmitRepository {
   export type Criteria = {
     id?: string;
     userId?: string;
+    problemId?: bigint;
     onlyIncomplete?: boolean;
   };
 
@@ -38,6 +39,7 @@ export module SubmitRepository {
       language: Language;
       status: SubmitStatus;
       createdAt: Date;
+      debugText: string;
     };
 
     export type Options = {
@@ -65,6 +67,7 @@ export module SubmitRepository {
       status?: SubmitStatus;
       time?: number;
       memory?: number;
+      debugText?: string;
     };
   }
 }
@@ -135,6 +138,7 @@ export class SubmitRepository {
           problem: {
             select: { id: true, name: true },
           },
+          debugText: true,
         },
         orderBy: { createdAt: 'desc' },
         skip: options.skip,

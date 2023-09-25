@@ -45,6 +45,28 @@ export module SubmitService {
     };
   }
 
+  export module manageList {
+    export type Options = {
+      userId?: string;
+      problemId?: bigint;
+      skip?: number;
+    };
+
+    export type Result = {
+      submits: {
+        id: string;
+        problem: {
+          id: bigint;
+          name: string;
+        };
+        language: Language;
+        status: SubmitStatus;
+        createdAt: Date;
+        debugText: string;
+      }[];
+    };
+  }
+
   export module subscribe {
     export type Options = {
       id?: string;
@@ -139,6 +161,19 @@ export class SubmitService {
       {
         skip: options.skip,
         take: 20,
+      },
+    );
+    return { submits };
+  }
+
+  async manageList(
+    options: SubmitService.manageList.Options,
+  ): Promise<SubmitService.manageList.Result> {
+    const submits = await this.submits.findMany(
+      { userId: options.userId, problemId: options.problemId },
+      {
+        skip: options.skip,
+        take: 50,
       },
     );
     return { submits };

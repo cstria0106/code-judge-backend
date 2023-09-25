@@ -118,6 +118,12 @@ export class SubmitWorkerService {
             },
           );
 
+          // Update debug text
+          await this.submits.update(submit.id, {
+            debugText: judgeResult.debugText,
+          });
+
+          // Update status
           await this.updateStatus(
             submit.id,
             match(judgeResult)

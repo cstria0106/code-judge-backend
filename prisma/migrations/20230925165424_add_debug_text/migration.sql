@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `Submit` ADD COLUMN `debugText` MEDIUMTEXT NOT NULL DEFAULT '';
