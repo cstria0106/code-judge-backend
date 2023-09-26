@@ -22,6 +22,8 @@ export module ProblemController {
         name: string;
         startTime: Date | null;
         endTime: Date | null;
+        timeLimit: number;
+        memoryLimit: number;
       }[];
     };
   }
@@ -35,6 +37,8 @@ export module ProblemController {
         startTime: Date | null;
         endTime: Date | null;
         templates: Codes;
+        timeLimit: number;
+        memoryLimit: number;
       };
     };
   }

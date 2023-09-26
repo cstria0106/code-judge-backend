@@ -142,7 +142,8 @@ export class SubmitWorkerService {
               submit.language,
               files,
               await this.storage.download(input),
-              5000,
+              submit.problem.timeLimit,
+              submit.problem.memoryLimit,
               async () => {
                 await this.updateStatus(submit.id, SubmitStatus.running(0));
               },

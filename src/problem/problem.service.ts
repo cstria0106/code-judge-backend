@@ -23,6 +23,8 @@ export module ProblemService {
         name: string;
         startTime: Date | null;
         endTime: Date | null;
+        timeLimit: number;
+        memoryLimit: number;
       }[];
     };
   }
@@ -36,6 +38,8 @@ export module ProblemService {
         startTime: Date | null;
         endTime: Date | null;
         templates: Codes;
+        timeLimit: number;
+        memoryLimit: number;
       };
     };
   }

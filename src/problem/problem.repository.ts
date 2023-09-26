@@ -26,6 +26,8 @@ export module ProblemRepository {
       name: string;
       startTime: Date | null;
       endTime: Date | null;
+      timeLimit: number;
+      memoryLimit: number;
     };
   }
 
@@ -38,6 +40,8 @@ export module ProblemRepository {
       endTime: Date | null;
       templates: Templates;
       artifacts: Artifacts;
+      timeLimit: number;
+      memoryLimit: number;
     };
   }
 
@@ -126,6 +130,8 @@ export class ProblemRepository {
         name: true,
         startTime: true,
         endTime: true,
+        timeLimit: true,
+        memoryLimit: true,
       },
     });
   }
@@ -144,6 +150,8 @@ export class ProblemRepository {
           endTime: true,
           templates: true,
           artifacts: true,
+          timeLimit: true,
+          memoryLimit: true,
         },
       })
       .then((problem) =>

@@ -21,6 +21,8 @@ export module SubmitRepository {
       problem: {
         id: bigint;
         name: string;
+        timeLimit: number;
+        memoryLimit: number;
       };
       language: Language;
       status: SubmitStatus;
@@ -102,7 +104,14 @@ export class SubmitRepository {
           language: true,
           status: true,
           createdAt: true,
-          problem: { select: { id: true, name: true } },
+          problem: {
+            select: {
+              id: true,
+              name: true,
+              timeLimit: true,
+              memoryLimit: true,
+            },
+          },
           code: true,
         },
       })

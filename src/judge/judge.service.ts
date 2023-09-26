@@ -46,6 +46,7 @@ export class JudgeService {
     files: Record<string, string>,
     input: Readable,
     timeLimit: number,
+    memoryLimit: number,
     onStarted: () => void,
     onProgress: (progress: number) => void,
   ) {
@@ -59,6 +60,7 @@ export class JudgeService {
           files,
           input,
           timeLimit,
+          memoryLimit,
           onProgress,
         );
       },
@@ -72,6 +74,7 @@ export class JudgeService {
     files: Record<string, string>,
     input: Readable,
     timeLimit: number,
+    memoryLimit: number,
     onProgress: (progress: number) => void,
   ): Promise<JudgeResult> {
     const lang = languages[language];
@@ -185,7 +188,7 @@ export class JudgeService {
             );
 
             if (memoryPrintMatch !== null) {
-              memory = Number(memoryPrintMatch[1]);
+              memory = Number(memoryPrintMatch[1]) * 1000;
             }
 
             return;
@@ -258,31 +261,39 @@ export class JudgeService {
     return (
       match(result)
         // Timeout
-        .with({ type: 'timeout' }, () => {
-          return {
-            type: 'FAILED',
-            reason: 'TIME_LIMIT_EXCEED',
-            debugText,
-          } satisfies JudgeResult;
-        })
-        // Runtime error
-        .with({ type: 'done', returnCode: P.not(0) }, (value) => {
-          return {
-            type: 'FAILED',
-            reason: 'RUNTIME_ERROR',
-            debugText,
-          } satisfies JudgeResult;
-        })
-        // Success
         .with(
-          { type: 'done', ok: true },
-          (result) =>
+          { type: 'timeout' },
+          () =>
             ({
-              type: 'SUCCESS',
-              time: result.time,
-              memory: result.memory,
+              type: 'FAILED',
+              reason: 'TIME_LIMIT_EXCEED',
               debugText,
             }) satisfies JudgeResult,
+        )
+        // Runtime error
+        .with(
+          { type: 'done', returnCode: P.not(0) },
+          () =>
+            ({
+              type: 'FAILED',
+              reason: 'RUNTIME_ERROR',
+              debugText,
+            }) satisfies JudgeResult,
+        )
+        // Success
+        .with({ type: 'done', ok: true }, (result) =>
+          result.memory <= memoryLimit
+            ? ({
+                type: 'SUCCESS',
+                time: result.time,
+                memory: result.memory,
+                debugText,
+              } satisfies JudgeResult)
+            : ({
+                type: 'FAILED',
+                reason: 'MEMORY_LIMIT_EXCEED',
+                debugText,
+              } satisfies JudgeResult),
         )
         // Failed
         .with(
