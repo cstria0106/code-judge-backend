@@ -1,5 +1,5 @@
 import { AmqpConnection, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Observable, Subject, finalize, map, merge, of, takeWhile } from 'rxjs';
 import typia from 'typia';
 
@@ -245,6 +245,20 @@ export class SubmitService {
   ): Promise<SubmitService.create.Result> {
     const { problem } = await this.problem.manageGet(data.problemId);
 
+    // Check judge code and input
+    const judgeCode = problem.templates.judge[data.language];
+    if (judgeCode === undefined) {
+      throw new BadRequestException(
+        'Invalid language. This problem does not support the language.',
+      );
+    }
+
+    const input = problem.artifacts.inputs['public'];
+    if (input === null) {
+      throw new BadRequestException('Invalid input type.');
+    }
+
+    // Create submit
     const submit = await this.submits.create({
       ...data,
       problemId: problem.id,
@@ -253,6 +267,7 @@ export class SubmitService {
       },
     });
 
+    // Publish to workers
     await this.amqp.publish(
       'submitWorker.loadBalancer',
       'submitWorker.startProcess',

@@ -82,7 +82,6 @@ export class JudgeService {
       WorkingDir: '/app',
       NetworkDisabled: true,
       HostConfig: {
-        AutoRemove: true,
         Mounts: Object.entries(files).map(([name, path]) => ({
           Type: 'bind',
           Source: path,
@@ -249,11 +248,17 @@ export class JudgeService {
     if (debugText.length === debugTextMaxLength) debugText += '...';
     if (debugText.length > 0) this.logger.debug(`[${submitId}] ${debugText}`);
 
+    try {
+      await container.kill();
+    } catch {}
+    try {
+      await container.remove();
+    } catch {}
+
     return (
       match(result)
         // Timeout
         .with({ type: 'timeout' }, () => {
-          container.kill().catch();
           return {
             type: 'FAILED',
             reason: 'TIME_LIMIT_EXCEED',
