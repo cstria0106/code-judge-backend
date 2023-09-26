@@ -52,8 +52,8 @@ model Problem {
   name        String
   description String @db.MediumText
 
-  timeLimit   Int @default(3000) // 3s
-  memoryLimit Int @default(128000000) // 128MB
+  timeLimit   Int    @default(3000) @db.UnsignedInt // 3s
+  memoryLimit BigInt @default(128000000) @db.UnsignedBigInt // 128MB
 
   templates Json
   artifacts Json

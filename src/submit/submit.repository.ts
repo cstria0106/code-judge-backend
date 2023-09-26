@@ -22,7 +22,7 @@ export module SubmitRepository {
         id: bigint;
         name: string;
         timeLimit: number;
-        memoryLimit: number;
+        memoryLimit: bigint;
       };
       language: Language;
       status: SubmitStatus;

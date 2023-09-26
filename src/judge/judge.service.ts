@@ -46,7 +46,7 @@ export class JudgeService {
     files: Record<string, string>,
     input: Readable,
     timeLimit: number,
-    memoryLimit: number,
+    memoryLimit: bigint,
     onStarted: () => void,
     onProgress: (progress: number) => void,
   ) {
@@ -74,7 +74,7 @@ export class JudgeService {
     files: Record<string, string>,
     input: Readable,
     timeLimit: number,
-    memoryLimit: number,
+    memoryLimit: bigint,
     onProgress: (progress: number) => void,
   ): Promise<JudgeResult> {
     const lang = languages[language];

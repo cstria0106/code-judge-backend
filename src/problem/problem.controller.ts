@@ -69,6 +69,8 @@ export module ProblemController {
         endTime: Date | null;
         artifacts: Artifacts;
         templates: Templates;
+        timeLimit: number;
+        memoryLimit: number;
       };
     };
   }
@@ -80,6 +82,8 @@ export module ProblemController {
         name: string;
         startTime: Date | null;
         endTime: Date | null;
+        timeLimit: number;
+        memoryLimit: number;
       }[];
     };
   }
@@ -100,6 +104,8 @@ export module ProblemController {
       templates?: Templates;
       startTime?: string | null;
       endTime?: string | null;
+      timeLimit?: number;
+      memoryLimit?: number;
     };
   }
 }
@@ -117,6 +123,7 @@ export class ProblemController {
       problem: {
         ...result.problem,
         id: result.problem.id.toString(),
+        memoryLimit: Number(result.problem.memoryLimit),
       },
     }));
   }
@@ -128,6 +135,7 @@ export class ProblemController {
       problems: result.problems.map((problem) => ({
         ...problem,
         id: problem.id.toString(),
+        memoryLimit: Number(problem.memoryLimit),
       })),
     }));
   }
@@ -159,6 +167,7 @@ export class ProblemController {
         body.endTime !== undefined && body.endTime !== null
           ? new Date(body.endTime)
           : body.endTime,
+      memoryLimit: bigint(body.memoryLimit),
     });
   }
 
@@ -181,6 +190,7 @@ export class ProblemController {
         problems: result.problems.map((problem) => ({
           ...problem,
           id: problem.id.toString(),
+          memoryLimit: Number(problem.memoryLimit),
         })),
       }));
   }
@@ -193,6 +203,7 @@ export class ProblemController {
       problem: {
         ...result.problem,
         id: result.problem.id.toString(),
+        memoryLimit: Number(result.problem.memoryLimit),
       },
     }));
   }

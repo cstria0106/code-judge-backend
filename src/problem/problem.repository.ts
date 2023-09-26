@@ -27,7 +27,7 @@ export module ProblemRepository {
       startTime: Date | null;
       endTime: Date | null;
       timeLimit: number;
-      memoryLimit: number;
+      memoryLimit: bigint;
     };
   }
 
@@ -41,7 +41,7 @@ export module ProblemRepository {
       templates: Templates;
       artifacts: Artifacts;
       timeLimit: number;
-      memoryLimit: number;
+      memoryLimit: bigint;
     };
   }
 
@@ -74,6 +74,8 @@ export module ProblemRepository {
       description?: string;
       artifacts?: Artifacts;
       templates?: Templates;
+      timeLimit?: number;
+      memoryLimit?: bigint;
     };
   }
 }

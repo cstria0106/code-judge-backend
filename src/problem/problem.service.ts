@@ -5,6 +5,7 @@ import { markedHighlight } from 'marked-highlight';
 
 import { FileRepository } from '../storage/file.repository';
 import { StorageService } from '../storage/storage.service';
+import { bigint } from '../util/bigint';
 import { Artifacts } from './artifacts';
 import { exampleTemplate } from './example-template';
 import { ProblemRepository } from './problem.repository';
@@ -24,7 +25,7 @@ export module ProblemService {
         startTime: Date | null;
         endTime: Date | null;
         timeLimit: number;
-        memoryLimit: number;
+        memoryLimit: bigint;
       }[];
     };
   }
@@ -39,7 +40,7 @@ export module ProblemService {
         endTime: Date | null;
         templates: Codes;
         timeLimit: number;
-        memoryLimit: number;
+        memoryLimit: bigint;
       };
     };
   }
@@ -67,6 +68,8 @@ export module ProblemService {
         name: string;
         startTime: Date | null;
         endTime: Date | null;
+        timeLimit: number;
+        memoryLimit: bigint;
       }[];
     };
   }
@@ -81,6 +84,8 @@ export module ProblemService {
         endTime: Date | null;
         artifacts: Artifacts;
         templates: Templates;
+        timeLimit: number;
+        memoryLimit: bigint;
       };
     };
   }
@@ -93,6 +98,8 @@ export module ProblemService {
       templates?: Templates;
       startTime?: Date | null;
       endTime?: Date | null;
+      timeLimit?: number;
+      memoryLimit?: bigint;
     };
   }
 
@@ -202,8 +209,6 @@ export class ProblemService {
     const problem = await this.problems.findOneOrThrow({
       id: problemId,
     });
-
-    const inputsToDelete: ('public' | 'hidden')[] = [];
 
     // Check artifacts uploaded
     if (data.artifacts) {
