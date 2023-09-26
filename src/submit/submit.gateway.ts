@@ -68,11 +68,11 @@ export module SubmitGateway {
 }
 
 @WebSocketGateway(undefined, {
-  cors: { origin: ['https://codejudge.miruku.dog'] },
+  cors: { origin: ['https://code.icnlab.dev'] },
   transports: ['websocket'],
 })
 export class SubmitGateway {
-  constructor(private readonly submit: SubmitService) {}
+  constructor(private readonly submit: SubmitService) { }
 
   @UseGuards(JwtGuard)
   @SubscribeMessage('get/submit')
