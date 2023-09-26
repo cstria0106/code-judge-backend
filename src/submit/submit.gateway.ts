@@ -72,7 +72,7 @@ export module SubmitGateway {
   transports: ['websocket'],
 })
 export class SubmitGateway {
-  constructor(private readonly submit: SubmitService) { }
+  constructor(private readonly submit: SubmitService) {}
 
   @UseGuards(JwtGuard)
   @SubscribeMessage('get/submit')
@@ -120,6 +120,7 @@ export class SubmitGateway {
             }))
             .exhaustive(),
         ),
+        map((e) => typia.assertPrune(e)),
       ),
     );
   }
