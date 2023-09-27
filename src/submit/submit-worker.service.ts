@@ -34,32 +34,26 @@ export class SubmitWorkerService {
     private readonly storage: StorageService,
 
     private readonly amqp: AmqpConnection,
-  ) {}
+  ) { }
 
   /** Status update buffer for throttling */
   private statusUpdates: Record<string, Subject<SubmitStatus>> = {};
-
-  private async updateStatus(submitId: string, status: SubmitStatus) {
-    if (!(status.type === 'RUNNING' && status.progress === 0)) {
-      await this.submits.update(submitId, {
-        status,
-        ...(status.type === 'COMPLETE' && status.result.type === 'SUCCESS'
-          ? {
-              time: status.result.time,
-              memory: status.result.memory,
-            }
-          : undefined),
-      });
-    }
-
-    this.publishStatus(submitId, status);
-  }
 
   // Start to subscribe submit status subject, and send republish the data to message queue
   private startSubscribe(submitId: string, subject: Subject<SubmitStatus>) {
     subject
       .pipe(throttleTime(250, undefined, { leading: true, trailing: true }))
-      .subscribe((status) => {
+      .subscribe(async (status) => {
+        this.submits.update(submitId, {
+          status,
+          ...(status.type === 'COMPLETE' && status.result.type === 'SUCCESS'
+            ? {
+              time: status.result.time,
+              memory: status.result.memory,
+            }
+            : undefined),
+        });
+
         this.amqp.publish('submit.broadcaster', 'submit.publishChangeEvent', {
           submitId,
           status,
@@ -131,7 +125,7 @@ export class SubmitWorkerService {
           judgeCode,
           submit.code,
           async () => {
-            await this.updateStatus(submit.id, SubmitStatus.compiling());
+            await this.publishStatus(submit.id, SubmitStatus.compiling());
           },
         );
 
@@ -145,10 +139,10 @@ export class SubmitWorkerService {
               submit.problem.timeLimit,
               submit.problem.memoryLimit,
               async () => {
-                await this.updateStatus(submit.id, SubmitStatus.running(0));
+                await this.publishStatus(submit.id, SubmitStatus.running(0));
               },
               async (progress) => {
-                await this.updateStatus(
+                await this.publishStatus(
                   submit.id,
                   SubmitStatus.running(progress),
                 );
@@ -161,7 +155,7 @@ export class SubmitWorkerService {
             });
 
             // Update status
-            await this.updateStatus(
+            await this.publishStatus(
               submit.id,
               match(judgeResult)
                 .with({ type: 'SUCCESS' }, ({ memory, time }) =>
@@ -174,13 +168,13 @@ export class SubmitWorkerService {
             );
           })
           .with({ type: 'FAILED' }, async ({ message }) => {
-            await this.updateStatus(
+            await this.publishStatus(
               submit.id,
               SubmitStatus.compileError(message),
             );
           })
           .with({ type: 'NO_RESOURCE' }, async () => {
-            await this.updateStatus(
+            await this.publishStatus(
               submit.id,
               SubmitStatus.compileError('No resource'),
             );
@@ -188,7 +182,7 @@ export class SubmitWorkerService {
           .exhaustive();
       } catch (e) {
         this.logger.error(e);
-        await this.updateStatus(submit.id, SubmitStatus.unknownError());
+        await this.publishStatus(submit.id, SubmitStatus.unknownError());
       }
     } catch (e) {
       this.logger.error(e);
