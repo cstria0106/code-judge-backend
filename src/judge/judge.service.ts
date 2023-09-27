@@ -224,12 +224,13 @@ export class JudgeService {
 
     // Pipe stdin, stdout
     container.modem.demuxStream(stream, output, output); // Container stdout, stderr => Output stream
-    stream.on('close', () => output.end());
-
     input.pipe(stream); // Input string => Container stdin
 
     // Start container
     await container.start();
+
+    // Close output stream when program exit
+    container.wait().then(() => output.end()).catch();
 
     const timeout = setTimeout(timeLimit, {
       type: 'timeout',
@@ -237,7 +238,8 @@ export class JudgeService {
 
     const waitForExit = container
       .wait()
-      .then((result) => result.StatusCode as number);
+      .then((result) => result.StatusCode as number)
+      .catch();
 
     const result = await Promise.race([
       timeout,
@@ -253,10 +255,10 @@ export class JudgeService {
 
     try {
       await container.kill();
-    } catch {}
+    } catch { }
     try {
       await container.remove();
-    } catch {}
+    } catch { }
 
     return (
       match(result)
@@ -284,16 +286,16 @@ export class JudgeService {
         .with({ type: 'done', ok: true }, (result) =>
           result.memory <= memoryLimit
             ? ({
-                type: 'SUCCESS',
-                time: result.time,
-                memory: result.memory,
-                debugText,
-              } satisfies JudgeResult)
+              type: 'SUCCESS',
+              time: result.time,
+              memory: result.memory,
+              debugText,
+            } satisfies JudgeResult)
             : ({
-                type: 'FAILED',
-                reason: 'MEMORY_LIMIT_EXCEED',
-                debugText,
-              } satisfies JudgeResult),
+              type: 'FAILED',
+              reason: 'MEMORY_LIMIT_EXCEED',
+              debugText,
+            } satisfies JudgeResult),
         )
         // Failed
         .with(

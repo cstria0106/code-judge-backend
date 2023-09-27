@@ -125,7 +125,7 @@ export class SubmitWorkerService {
           judgeCode,
           submit.code,
           async () => {
-            await this.publishStatus(submit.id, SubmitStatus.compiling());
+            this.publishStatus(submit.id, SubmitStatus.compiling());
           },
         );
 
@@ -139,10 +139,10 @@ export class SubmitWorkerService {
               submit.problem.timeLimit,
               submit.problem.memoryLimit,
               async () => {
-                await this.publishStatus(submit.id, SubmitStatus.running(0));
+                this.publishStatus(submit.id, SubmitStatus.running(0));
               },
               async (progress) => {
-                await this.publishStatus(
+                this.publishStatus(
                   submit.id,
                   SubmitStatus.running(progress),
                 );
@@ -155,7 +155,7 @@ export class SubmitWorkerService {
             });
 
             // Update status
-            await this.publishStatus(
+            this.publishStatus(
               submit.id,
               match(judgeResult)
                 .with({ type: 'SUCCESS' }, ({ memory, time }) =>
@@ -168,13 +168,13 @@ export class SubmitWorkerService {
             );
           })
           .with({ type: 'FAILED' }, async ({ message }) => {
-            await this.publishStatus(
+            this.publishStatus(
               submit.id,
               SubmitStatus.compileError(message),
             );
           })
           .with({ type: 'NO_RESOURCE' }, async () => {
-            await this.publishStatus(
+            this.publishStatus(
               submit.id,
               SubmitStatus.compileError('No resource'),
             );
@@ -182,7 +182,7 @@ export class SubmitWorkerService {
           .exhaustive();
       } catch (e) {
         this.logger.error(e);
-        await this.publishStatus(submit.id, SubmitStatus.unknownError());
+        this.publishStatus(submit.id, SubmitStatus.unknownError());
       }
     } catch (e) {
       this.logger.error(e);
