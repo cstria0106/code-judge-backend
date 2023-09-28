@@ -49,35 +49,35 @@ int main() {
     JAVA: `import java.io.IOException;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
-        var judge = new Judge();
-        var reader = new Judge.Reader();
-        var count = reader.readInt();
+  public static void main(String[] args) throws IOException {
+    var judge = new Judge();
+    var reader = new Judge.Reader();
+    var count = reader.readInt();
 
-        var inputs = new int[count];
-        var outputs = new long[count];
+    var inputs = new int[count];
+    var outputs = new long[count];
 
-        for (int i = 0; i < count; i++) {
-            inputs[i] = reader.readInt();
-            outputs[i] = reader.readLong();
-        }
-
-        judge.start(count);
-
-        for (int i = 0; i < count; i++) {
-            var input = inputs[i];
-            var expected = outputs[i];
-            var result = Solution.fibonacci(input);
-
-            judge.progress(i);
-
-            if (result != expected) {
-                judge.fail();
-            }
-        }
-
-        judge.success();
+    for (int i = 0; i < count; i++) {
+      inputs[i] = reader.readInt();
+      outputs[i] = reader.readLong();
     }
+
+    judge.start(count);
+
+    for (int i = 0; i < count; i++) {
+      var input = inputs[i];
+      var expected = outputs[i];
+      var result = Solution.fibonacci(input);
+
+      judge.progress(i);
+
+      if (result != expected) {
+        judge.fail();
+      }
+    }
+
+    judge.success();
+  }
 }
 `,
   },
