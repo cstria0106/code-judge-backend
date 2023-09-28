@@ -1,10 +1,19 @@
 #include <stdio.h>
-#include <time.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdint.h>
+#include <sys/time.h>
 
 int judge_steps;
-time_t judge_start_time;
+int64_t judge_start_time;
+
+int64_t now() {
+  struct timeval time;
+  gettimeofday(&time, NULL);
+  int64_t s1 = (int64_t)(time.tv_sec) * 1000;
+  int64_t s2 = (time.tv_usec / 1000);
+  return s1 + s2;
+}
 
 void judge_vprint(const char *type, const char *format, va_list ap)
 {
@@ -42,7 +51,7 @@ void judge_printf(const char *format, ...)
  */
 void judge_start(int steps)
 {
-    judge_start_time = time(NULL);
+    judge_start_time = now();
     judge_steps = steps;
 }
 
@@ -69,6 +78,6 @@ void judge_fail()
  */
 void judge_success()
 {
-    judge_print("SUCCESS", "%d", (int)(difftime(time(NULL), judge_start_time) * 1000));
+    judge_print("SUCCESS", "%ld", now() - judge_start_time);
     exit(0);
 }
