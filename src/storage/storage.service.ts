@@ -35,6 +35,7 @@ export class StorageService implements OnModuleInit {
     this.bucket = config.getOrThrow<string>('AWS_S3_BUCKET');
     this.cache = new LRUCache({
       maxSize: 1024 * 1024 * 512,
+      sizeCalculation: (buffer) => buffer.length,
     });
   }
 
