@@ -1,6 +1,7 @@
 import { AmqpConnection, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Subject, throttleTime } from 'rxjs';
+import { Readable } from 'stream';
 import { match } from 'ts-pattern';
 import typia from 'typia';
 
@@ -34,7 +35,7 @@ export class SubmitWorkerService {
     private readonly storage: StorageService,
 
     private readonly amqp: AmqpConnection,
-  ) { }
+  ) {}
 
   /** Status update buffer for throttling */
   private statusUpdates: Record<string, Subject<SubmitStatus>> = {};
@@ -48,9 +49,9 @@ export class SubmitWorkerService {
           status,
           ...(status.type === 'COMPLETE' && status.result.type === 'SUCCESS'
             ? {
-              time: status.result.time,
-              memory: status.result.memory,
-            }
+                time: status.result.time,
+                memory: status.result.memory,
+              }
             : undefined),
         });
 
@@ -115,9 +116,6 @@ export class SubmitWorkerService {
         }
 
         const input = problem.artifacts.inputs[data.inputId ?? 'public'];
-        if (input === null) {
-          throw new BadRequestException('Invalid input type.');
-        }
 
         const compileResult = await this.compiler.enqueue(
           submit.id,
@@ -135,17 +133,17 @@ export class SubmitWorkerService {
               submit.id,
               submit.language,
               files,
-              await this.storage.download(input),
+              // Empty if input is not defined
+              input === null
+                ? Readable.from([])
+                : await this.storage.download(input),
               submit.problem.timeLimit,
               submit.problem.memoryLimit,
               async () => {
                 this.publishStatus(submit.id, SubmitStatus.running(0));
               },
               async (progress) => {
-                this.publishStatus(
-                  submit.id,
-                  SubmitStatus.running(progress),
-                );
+                this.publishStatus(submit.id, SubmitStatus.running(progress));
               },
             );
 
@@ -168,10 +166,7 @@ export class SubmitWorkerService {
             );
           })
           .with({ type: 'FAILED' }, async ({ message }) => {
-            this.publishStatus(
-              submit.id,
-              SubmitStatus.compileError(message),
-            );
+            this.publishStatus(submit.id, SubmitStatus.compileError(message));
           })
           .with({ type: 'NO_RESOURCE' }, async () => {
             this.publishStatus(

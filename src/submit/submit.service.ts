@@ -253,11 +253,6 @@ export class SubmitService {
       );
     }
 
-    const input = problem.artifacts.inputs['public'];
-    if (input === null) {
-      throw new BadRequestException('Invalid input type.');
-    }
-
     // Create submit
     const submit = await this.submits.create({
       ...data,
