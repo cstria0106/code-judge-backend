@@ -15,13 +15,17 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectAws } from 'aws-sdk-v3-nest';
 import { randomUUID } from 'crypto';
+import { LRUCache } from 'lru-cache';
 import { Readable } from 'stream';
+import { promisify } from 'util';
+import zlib from 'zlib';
 
 import { FileRepository } from './file.repository';
 
 @Injectable()
 export class StorageService implements OnModuleInit {
   private bucket: string;
+  private cache: LRUCache<string, Buffer>;
 
   constructor(
     config: ConfigService,
@@ -29,6 +33,9 @@ export class StorageService implements OnModuleInit {
     private readonly files: FileRepository,
   ) {
     this.bucket = config.getOrThrow<string>('AWS_S3_BUCKET');
+    this.cache = new LRUCache({
+      maxSize: 1024 * 1024 * 512,
+    });
   }
 
   async onModuleInit() {
@@ -48,8 +55,9 @@ export class StorageService implements OnModuleInit {
   ): Promise<string> {
     const id = `${idPrefix ?? ''}${randomUUID()}`;
 
+    const compressed = await promisify(zlib.gzip)(file);
     await this.s3.send(
-      new PutObjectCommand({ Bucket: this.bucket, Key: id, Body: file }),
+      new PutObjectCommand({ Bucket: this.bucket, Key: id, Body: compressed }),
     );
 
     await this.files.createOne({
@@ -63,23 +71,31 @@ export class StorageService implements OnModuleInit {
   }
 
   async download(id: string): Promise<Readable> {
-    try {
-      return this.s3
-        .send(new GetObjectCommand({ Bucket: this.bucket, Key: id }))
-        .then((response) => {
-          if (response.Body === undefined) {
-            throw new NotFoundException();
-          }
+    const cached = this.cache.get(id);
+    const buffer =
+      cached !== undefined
+        ? cached
+        : await this.s3
+            .send(new GetObjectCommand({ Bucket: this.bucket, Key: id }))
+            .then(async (response) => {
+              if (response.Body === undefined) {
+                throw new NotFoundException();
+              }
 
-          if (!(response.Body instanceof Readable)) {
-            throw new InternalServerErrorException();
-          }
+              if (!(response.Body instanceof Readable)) {
+                throw new InternalServerErrorException();
+              }
 
-          return response.Body;
-        });
-    } catch (e) {
-      throw new NotFoundException();
-    }
+              const chunks = [];
+              for await (let chunk of response.Body) {
+                chunks.push(chunk);
+              }
+              return Buffer.concat(chunks);
+            });
+
+    this.cache.set(id, buffer);
+
+    return Readable.from(buffer).pipe(zlib.createGunzip());
   }
 
   async destroy(id: string): Promise<void> {

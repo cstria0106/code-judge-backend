@@ -4,4 +4,4 @@ if [ -z "$1" ]; then
 fi
 
 docker compose build app
-docker save code-judge-backend | ssh -C "$1" docker load
+docker save code-judge-backend | gzip | ssh -C "$1" docker load

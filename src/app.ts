@@ -1,10 +1,12 @@
 import { NestFactory } from '@nestjs/core';
+import compression from 'compression';
 
 import { AppModule } from './app.module';
 import { SubmitService } from './submit/submit.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(compression());
 
   const submitService = app.get(SubmitService);
   await submitService.clean();
