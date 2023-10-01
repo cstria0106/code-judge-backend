@@ -38,6 +38,10 @@ export module SubmitController {
 
     export type Response = {
       submits: {
+        user: {
+          id: string;
+          name: string;
+        };
         id: string;
         problem: {
           id: string;

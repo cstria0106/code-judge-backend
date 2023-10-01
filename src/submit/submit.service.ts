@@ -55,6 +55,10 @@ export module SubmitService {
     export type Result = {
       submits: {
         id: string;
+        user: {
+          id: string;
+          name: string;
+        };
         problem: {
           id: bigint;
           name: string;
