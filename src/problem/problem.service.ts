@@ -210,17 +210,6 @@ export class ProblemService {
       id: problemId,
     });
 
-    // Check artifacts uploaded
-    if (data.artifacts) {
-      // Inputs
-      for (const name of keys(data.artifacts.inputs)) {
-        const id = data.artifacts.inputs[name];
-        if (id !== null) {
-          await this.files.findOneOrThrow({ id });
-        }
-      }
-    }
-
     await this.problems.update(problem.id, data);
   }
 
@@ -231,7 +220,7 @@ export class ProblemService {
     // Delete artifacts
     for (const name of keys(problem.artifacts.inputs)) {
       const id = problem.artifacts.inputs[name];
-      if (id !== null) {
+      if (id !== null && id !== undefined) {
         try {
           await this.storage.destroy(id);
         } catch (e) {}

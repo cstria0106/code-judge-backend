@@ -134,7 +134,7 @@ export class SubmitWorkerService {
               submit.language,
               files,
               // Empty if input is not defined
-              input === null
+              input === null || input === undefined
                 ? Readable.from([])
                 : await this.storage.download(input),
               submit.problem.timeLimit,

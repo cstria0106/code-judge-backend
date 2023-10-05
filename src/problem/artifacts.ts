@@ -1,8 +1,8 @@
 export type Artifacts = {
   inputs: {
     // s3 key
-    public: string | null;
+    public?: string | null;
     // s3 key
-    hidden: string | null;
+    hidden?: string | null;
   };
 };
