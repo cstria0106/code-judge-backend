@@ -191,10 +191,7 @@ export class ProblemService {
       description:
         '# Hello, world!\nThis is new problem.\n\nPlease refer to the [Markdown Cheat Sheet](https://www.markdownguide.org/cheat-sheet/) to help you write new question.',
       artifacts: {
-        inputs: {
-          public: null,
-          hidden: null,
-        },
+        inputs: {},
       },
       templates: exampleTemplate,
     });
@@ -220,7 +217,7 @@ export class ProblemService {
     // Delete artifacts
     for (const name of keys(problem.artifacts.inputs)) {
       const id = problem.artifacts.inputs[name];
-      if (id !== null && id !== undefined) {
+      if (id !== undefined) {
         try {
           await this.storage.destroy(id);
         } catch (e) {}
