@@ -73,11 +73,14 @@ export class JudgeService {
     language: Language,
     files: Record<string, string>,
     input: Readable,
-    timeLimit: number,
-    memoryLimit: bigint,
+    rawTimeLimit: number,
+    rawMemoryLimit: bigint,
     onProgress: (progress: number) => void,
   ): Promise<JudgeResult> {
     const lang = languages[language];
+    const timeLimit = lang.timeLimitAdvantage?.(rawTimeLimit) ?? rawTimeLimit;
+    const memoryLimit =
+      lang.memoryLimitAdvantage?.(rawMemoryLimit) ?? rawMemoryLimit;
 
     const container = await this.docker.createContainer({
       Image: lang.runtime.image,
@@ -230,7 +233,10 @@ export class JudgeService {
     await container.start();
 
     // Close output stream when program exit
-    container.wait().then(() => output.end()).catch();
+    container
+      .wait()
+      .then(() => output.end())
+      .catch();
 
     const timeout = setTimeout(timeLimit, {
       type: 'timeout',
@@ -255,10 +261,10 @@ export class JudgeService {
 
     try {
       await container.kill();
-    } catch { }
+    } catch {}
     try {
       await container.remove();
-    } catch { }
+    } catch {}
 
     return (
       match(result)
@@ -286,16 +292,16 @@ export class JudgeService {
         .with({ type: 'done', ok: true }, (result) =>
           result.memory <= memoryLimit
             ? ({
-              type: 'SUCCESS',
-              time: result.time,
-              memory: result.memory,
-              debugText,
-            } satisfies JudgeResult)
+                type: 'SUCCESS',
+                time: result.time,
+                memory: result.memory,
+                debugText,
+              } satisfies JudgeResult)
             : ({
-              type: 'FAILED',
-              reason: 'MEMORY_LIMIT_EXCEED',
-              debugText,
-            } satisfies JudgeResult),
+                type: 'FAILED',
+                reason: 'MEMORY_LIMIT_EXCEED',
+                debugText,
+              } satisfies JudgeResult),
         )
         // Failed
         .with(

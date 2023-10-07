@@ -28,6 +28,8 @@ type Languages = Record<
     judgeCodeName: string;
     solutionCodeName: string;
     buildFiles: string[];
+    timeLimitAdvantage?: (timeLimit: number) => number;
+    memoryLimitAdvantage?: (memoryLimit: bigint) => bigint;
   }
 >;
 
@@ -155,5 +157,6 @@ export const languages: Languages = {
       '_{{SUBMIT_ID}}_Judge.class',
       '_{{SUBMIT_ID}}_Judge$Reader.class',
     ],
+    memoryLimitAdvantage: (limit) => limit + 200n * 1000n ** 1000n, // 200MB
   },
 };
