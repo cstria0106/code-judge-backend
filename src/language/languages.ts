@@ -157,6 +157,7 @@ export const languages: Languages = {
       '_{{SUBMIT_ID}}_Judge.class',
       '_{{SUBMIT_ID}}_Judge$Reader.class',
     ],
-    memoryLimitAdvantage: (limit) => limit + 200n * 1000n ** 1000n, // 200MB
+    memoryLimitAdvantage: (limit) =>
+      limit + BigInt(200) * BigInt(1000) * BigInt(1000), // 200MB
   },
 };
