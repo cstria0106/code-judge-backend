@@ -3,6 +3,7 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Observable, Subject, finalize, map, merge, of, takeWhile } from 'rxjs';
 import typia from 'typia';
 
+import { Artifacts } from '../problem/artifacts';
 import { ProblemService } from '../problem/problem.service';
 import { Language } from '../problem/template';
 import { tryTypia } from '../util/try-typia';
@@ -266,16 +267,18 @@ export class SubmitService {
       },
     });
 
-    // Publish to workers
+    // Start judge
+    await this.startJudge(submit.id, 'public');
+
+    return { submit };
+  }
+
+  async startJudge(submitId: string, inputId: keyof Artifacts['inputs']) {
     await this.amqp.publish(
       'submitWorker.loadBalancer',
       'submitWorker.startProcess',
-      {
-        submitId: submit.id,
-      } satisfies SubmitWorkerService.startProcess.Data,
+      { submitId, inputId } satisfies SubmitWorkerService.startProcess.Data,
     );
-
-    return { submit };
   }
 
   // Set all incomplete submits to be complete (unknown error)

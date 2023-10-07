@@ -7,6 +7,7 @@ import typia from 'typia';
 
 import { CompilerService } from '../compiler/compile.service';
 import { JudgeService } from '../judge/judge.service';
+import { Artifacts } from '../problem/artifacts';
 import { ProblemService } from '../problem/problem.service';
 import { StorageService } from '../storage/storage.service';
 import { tryTypia } from '../util/try-typia';
@@ -18,7 +19,7 @@ export module SubmitWorkerService {
   export module startProcess {
     export type Data = {
       submitId: string;
-      inputId?: 'public' | 'hidden';
+      inputId: keyof Artifacts['inputs'];
     };
   }
 }
@@ -139,10 +140,10 @@ export class SubmitWorkerService {
                 : await this.storage.download(input),
               submit.problem.timeLimit,
               submit.problem.memoryLimit,
-              async () => {
+              () => {
                 this.publishStatus(submit.id, SubmitStatus.running(0));
               },
-              async (progress) => {
+              (progress) => {
                 this.publishStatus(submit.id, SubmitStatus.running(progress));
               },
             );
