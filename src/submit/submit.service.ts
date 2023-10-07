@@ -1,5 +1,10 @@
 import { AmqpConnection, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Observable, Subject, finalize, map, merge, of, takeWhile } from 'rxjs';
 import typia from 'typia';
 
@@ -211,6 +216,11 @@ export class SubmitService {
         ? [initialOrDetail.submit]
         : initialOrDetail.submits
     ).filter((submits) => submits.status.type !== 'COMPLETE');
+
+    // Restrict permission to subscribe
+    if (incompleteSubmits.some((submit) => submit.user.id !== userId)) {
+      throw new ForbiddenException();
+    }
 
     const submitIdsToSubscribe = incompleteSubmits.map((submit) => submit.id);
 

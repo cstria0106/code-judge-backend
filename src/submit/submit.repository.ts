@@ -18,6 +18,10 @@ export module SubmitRepository {
   export module findOne {
     export type Submit = {
       id: string;
+      user: {
+        id: string;
+        name: string;
+      };
       problem: {
         id: bigint;
         name: string;
@@ -105,6 +109,12 @@ export class SubmitRepository {
         where: this.where(criteria),
         select: {
           id: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
           language: true,
           status: true,
           createdAt: true,
