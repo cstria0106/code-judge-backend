@@ -32,6 +32,7 @@ export module SubmitRepository {
       status: SubmitStatus;
       createdAt: Date;
       code: string;
+      debugText: string;
     };
   }
 
@@ -127,6 +128,7 @@ export class SubmitRepository {
             },
           },
           code: true,
+          debugText: true,
         },
       })
       .then((submit) =>

@@ -1,5 +1,5 @@
-import { TypedQuery, TypedRoute } from '@nestia/core';
-import { Body, Controller } from '@nestjs/common';
+import { TypedParam, TypedQuery, TypedRoute } from '@nestia/core';
+import { Body, Controller, ForbiddenException } from '@nestjs/common';
 
 import { JwtPayload } from '../jwt/jwt.service';
 import { Roles } from '../jwt/roles.decorator';
@@ -52,6 +52,43 @@ export module SubmitController {
         createdAt: Date;
         debugText: string;
       }[];
+    };
+  }
+
+  export module get {
+    export type Response = {
+      submit: {
+        id: string;
+        problem: {
+          id: string;
+          name: string;
+        };
+        language: Language;
+        status: SubmitStatus;
+        createdAt: Date;
+        code: string;
+      };
+    };
+  }
+
+  export module manageGet {
+    export type Response = {
+      submit: {
+        user: {
+          id: string;
+          name: string;
+        };
+        id: string;
+        problem: {
+          id: string;
+          name: string;
+        };
+        language: Language;
+        status: SubmitStatus;
+        createdAt: Date;
+        debugText: string;
+        code: string;
+      };
     };
   }
 
@@ -110,6 +147,43 @@ export class SubmitController {
           },
         })),
       }));
+  }
+
+  @Roles(['ADMIN', 'STUDENT'])
+  @TypedRoute.Get(':id')
+  async get(
+    @TypedParam('id') id: string,
+    @User() user: JwtPayload,
+  ): Promise<SubmitController.get.Response> {
+    const submit = await this.submit.get(id);
+    if (submit.user.id !== user.id) {
+      throw new ForbiddenException();
+    }
+    return {
+      submit: {
+        ...submit,
+        problem: {
+          ...submit.problem,
+          id: submit.problem.id.toString(),
+        },
+      },
+    };
+  }
+
+  @Roles(['ADMIN'])
+  @TypedRoute.Get('manage/:id')
+  async manageGet(
+    @TypedParam('id') id: string,
+  ): Promise<SubmitController.manageGet.Response> {
+    return {
+      submit: await this.submit.get(id).then((submit) => ({
+        ...submit,
+        problem: {
+          ...submit.problem,
+          id: submit.problem.id.toString(),
+        },
+      })),
+    };
   }
 
   @TypedRoute.Post()

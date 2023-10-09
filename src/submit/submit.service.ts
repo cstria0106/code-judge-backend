@@ -176,6 +176,10 @@ export class SubmitService {
     return { submits };
   }
 
+  async get(id: string) {
+    return this.submits.findOneOrThrow({ id });
+  }
+
   async manageList(
     options: SubmitService.manageList.Options,
   ): Promise<SubmitService.manageList.Result> {
@@ -216,11 +220,6 @@ export class SubmitService {
         ? [initialOrDetail.submit]
         : initialOrDetail.submits
     ).filter((submits) => submits.status.type !== 'COMPLETE');
-
-    // Restrict permission to subscribe
-    if (incompleteSubmits.some((submit) => submit.user.id !== userId)) {
-      throw new ForbiddenException();
-    }
 
     const submitIdsToSubscribe = incompleteSubmits.map((submit) => submit.id);
 
