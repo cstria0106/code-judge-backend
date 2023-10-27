@@ -1,9 +1,8 @@
 import { TypedBody, TypedParam, TypedQuery, TypedRoute } from '@nestia/core';
-import { BadRequestException, Controller } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { Language } from 'highlight.js';
 
 import { Roles } from '../jwt/roles.decorator';
-import { SubmitStatus } from '../submit/status';
 import { bigint } from '../util/bigint';
 import { Artifacts } from './artifacts';
 import { ProblemService } from './problem.service';

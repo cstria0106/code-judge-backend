@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import hljs, { Language } from 'highlight.js';
 import { Marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 
 import { FileRepository } from '../storage/file.repository';
 import { StorageService } from '../storage/storage.service';
+import { UserRepository } from '../user/user.repository';
 import { bigint } from '../util/bigint';
+import { ensure } from '../util/ensure';
 import { Artifacts } from './artifacts';
 import { exampleTemplate } from './example-template';
 import { ProblemRepository } from './problem.repository';
@@ -121,6 +123,7 @@ export class ProblemService {
     private readonly problems: ProblemRepository,
     private readonly storage: StorageService,
     private readonly files: FileRepository,
+    private readonly users: UserRepository,
   ) {
     this.marked = new Marked(
       markedHighlight({
@@ -157,12 +160,28 @@ export class ProblemService {
     return { problems };
   }
 
-  async get(id: bigint): Promise<ProblemService.get.Result> {
+  async get(
+    id: bigint,
+    options?: { userId: string },
+  ): Promise<ProblemService.get.Result> {
     const now = new Date();
-    const problem = await this.problems.findOneOrThrow({
+    let problem = await this.problems.findOneOrThrow({
       id,
-      startTimeIsBefore: now,
     });
+
+    // Allow admin to get problem before start
+    if (problem.startTime !== null && problem.startTime > now) {
+      if (options?.userId === undefined) {
+        throw new NotFoundException('problem not found');
+      }
+
+      const user = await this.users.findOneOrThrow({
+        id: options.userId,
+      });
+      if (user.role !== 'ADMIN') {
+        throw new NotFoundException('problem not found');
+      }
+    }
 
     problem.description = await this.marked.parse(problem.description);
 
