@@ -31,9 +31,14 @@ export module SubmitController {
 
   export module manageList {
     export type Query = {
+      searchId?: string;
       skip?: number;
       userId?: string;
       problemId?: string;
+      statusType?: SubmitStatus['type'];
+      statusResultType?: (SubmitStatus & {
+        type: 'COMPLETE';
+      })['result']['type'];
     };
 
     export type Response = {
@@ -134,9 +139,18 @@ export class SubmitController {
   ): Promise<SubmitController.manageList.Response> {
     return this.submit
       .manageList({
+        search: {
+          id: query.searchId,
+        },
         userId: query.userId,
         skip: query.skip,
         problemId: bigint(query.problemId),
+        status: {
+          type: query.statusType,
+          result: {
+            type: query.statusResultType,
+          },
+        },
       })
       .then((result) => ({
         submits: result.submits.map((submit) => ({

@@ -12,7 +12,13 @@ export module SubmitRepository {
     id?: string;
     userId?: string;
     problemId?: bigint;
-    onlyIncomplete?: boolean;
+    status?: {
+      type?: SubmitStatus['type'];
+      typeIsNot?: SubmitStatus['type'];
+      result?: {
+        type?: (SubmitStatus & { type: 'COMPLETE' })['result']['type'];
+      };
+    };
   };
 
   export module findOne {
@@ -52,11 +58,6 @@ export module SubmitRepository {
       createdAt: Date;
       debugText: string;
     };
-
-    export type Options = {
-      take?: number;
-      skip?: number;
-    };
   }
 
   export module create {
@@ -91,11 +92,27 @@ export class SubmitRepository {
     return {
       id: criteria.id,
       userId: criteria.userId,
-      ...(criteria.onlyIncomplete
+      ...(criteria.status?.type !== undefined
         ? {
             status: {
               path: '$.type',
-              not: 'COMPLETE',
+              equals: criteria.status.type,
+            },
+          }
+        : undefined),
+      ...(criteria.status?.typeIsNot !== undefined
+        ? {
+            status: {
+              path: '$.type',
+              not: criteria.status.typeIsNot,
+            },
+          }
+        : undefined),
+      ...(criteria.status?.result?.type !== undefined
+        ? {
+            status: {
+              path: '$.result.type',
+              equals: criteria.status.type,
             },
           }
         : undefined),
@@ -150,7 +167,10 @@ export class SubmitRepository {
 
   async findMany(
     criteria: SubmitRepository.Criteria,
-    options: SubmitRepository.findMany.Options,
+    options: {
+      take?: number;
+      skip?: number;
+    },
   ): Promise<SubmitRepository.findMany.Submit[]> {
     return this.prisma.submit
       .findMany({

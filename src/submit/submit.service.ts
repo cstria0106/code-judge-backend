@@ -1,10 +1,5 @@
 import { AmqpConnection, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Observable, Subject, finalize, map, merge, of, takeWhile } from 'rxjs';
 import typia from 'typia';
 
@@ -33,10 +28,6 @@ export module SubmitService {
   }
 
   export module list {
-    export type Options = {
-      skip?: number;
-    };
-
     export type Result = {
       submits: {
         id: string;
@@ -52,12 +43,6 @@ export module SubmitService {
   }
 
   export module manageList {
-    export type Options = {
-      userId?: string;
-      problemId?: bigint;
-      skip?: number;
-    };
-
     export type Result = {
       submits: {
         id: string;
@@ -164,7 +149,10 @@ export class SubmitService {
 
   async list(
     userId: string,
-    options: SubmitService.list.Options,
+    options: {
+      skip?: number;
+      userId?: string;
+    },
   ): Promise<SubmitService.list.Result> {
     const submits = await this.submits.findMany(
       { userId },
@@ -180,11 +168,26 @@ export class SubmitService {
     return this.submits.findOneOrThrow({ id });
   }
 
-  async manageList(
-    options: SubmitService.manageList.Options,
-  ): Promise<SubmitService.manageList.Result> {
+  async manageList(options: {
+    search?: {
+      id?: string;
+    };
+    userId?: string;
+    problemId?: bigint;
+    skip?: number;
+    status?: {
+      type?: SubmitStatus['type'];
+      result?: {
+        type?: (SubmitStatus & { type: 'COMPLETE' })['result']['type'];
+      };
+    };
+  }): Promise<SubmitService.manageList.Result> {
     const submits = await this.submits.findMany(
-      { userId: options.userId, problemId: options.problemId },
+      {
+        userId: options.userId,
+        problemId: options.problemId,
+        status: options.status,
+      },
       {
         skip: options.skip,
         take: 50,
@@ -292,7 +295,10 @@ export class SubmitService {
 
   // Set all incomplete submits to be complete (unknown error)
   async clean() {
-    const submits = await this.submits.findMany({ onlyIncomplete: true }, {});
+    const submits = await this.submits.findMany(
+      { status: { typeIsNot: 'COMPLETE' } },
+      {},
+    );
 
     for (const submit of submits) {
       await this.submits.update(submit.id, {

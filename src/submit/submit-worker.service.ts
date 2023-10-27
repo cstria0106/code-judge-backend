@@ -102,7 +102,9 @@ export class SubmitWorkerService {
 
       const submit = await this.submits.findOneOrThrow({
         id: data.submitId,
-        onlyIncomplete: true,
+        status: {
+          typeIsNot: 'COMPLETE',
+        },
       });
 
       try {
