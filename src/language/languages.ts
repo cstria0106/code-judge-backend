@@ -8,16 +8,16 @@ type Languages = Record<
       command: readonly string[];
       transforms?: readonly (
         | {
-            type: 'replace_string';
-            targets: readonly string[];
-            from: string;
-            to: string;
-          }
+          type: 'replace_string';
+          targets: readonly string[];
+          from: string;
+          to: string;
+        }
         | {
-            type: 'rename_file';
-            target: string;
-            to: string;
-          }
+          type: 'rename_file';
+          target: string;
+          to: string;
+        }
       )[];
       environments?: Record<string, string>;
     };
@@ -53,7 +53,7 @@ export const languages: Languages = {
         },
       ],
       environments: {
-        BUILD_FLAGS: '-O2 -std=c11',
+        BUILD_FLAGS: '-O2 -std=c11 -Werror=return-type',
         CXX: 'gcc',
         MAIN: 'main.c',
         SOLUTION: 'solution.c',
@@ -86,7 +86,7 @@ export const languages: Languages = {
         },
       ],
       environments: {
-        BUILD_FLAGS: '-O2 -std=c++20',
+        BUILD_FLAGS: '-O2 -std=c++20 -Werror=return-type',
         CXX: 'g++',
         MAIN: 'main.cpp',
         SOLUTION: 'solution.cpp',
