@@ -9,7 +9,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - 3000:3000
-    env_file: .env.app
+    env_file: .env.docker.app
     depends_on:
       - database
       - rabbitmq
@@ -23,7 +23,7 @@ services:
       - ./volumes/database/conf.d:/etc/mysql/conf.d
       - ./volumes/database/data:/var/lib/mysql
       - ./volumes/database/initdb.d:/docker-entrypoint-initdb.d
-    env_file: .env.db
+    env_file: .env.docker.db
     environment:
       TZ: UTC
     restart: always
@@ -35,4 +35,4 @@ services:
     ports:
       - '5672:5672'
       - '15672:15672'
-    env_file: .env.rmq
+    env_file: .env.docker.rmq
