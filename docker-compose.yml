@@ -14,15 +14,6 @@ services:
       - database
       - rabbitmq
     restart: always
-  worker:
-    container_name: code-judge-worker
-    image: code-judge-worker
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: pnpm run start:prod:worker
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
   database:
     container_name: database
     image: mariadb:11
@@ -32,7 +23,7 @@ services:
       - ./volumes/database/conf.d:/etc/mysql/conf.d
       - ./volumes/database/data:/var/lib/mysql
       - ./volumes/database/initdb.d:/docker-entrypoint-initdb.d
-    env_file: .env
+    env_file: .env.db
     environment:
       TZ: UTC
     restart: always
@@ -44,4 +35,4 @@ services:
     ports:
       - '5672:5672'
       - '15672:15672'
-    env_file: .env
+    env_file: .env.rmq
