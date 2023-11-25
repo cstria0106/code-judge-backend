@@ -6,6 +6,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {
   Injectable,
   InternalServerErrorException,
@@ -47,28 +48,41 @@ export class StorageService implements OnModuleInit {
     }
   }
 
-  async upload(
-    file: Buffer,
-    filename: string,
-    size: number,
+  async getUploadUrl(
     uploaderId: string,
-    idPrefix?: string,
-  ): Promise<string> {
-    const id = `${idPrefix ?? ''}${randomUUID()}`;
+    filename: string,
+    keyPrefix?: string,
+  ): Promise<{ id: string; url: string }> {
+    const id = `${keyPrefix ?? ''}${randomUUID()}`;
 
-    const compressed = await promisify(zlib.gzip)(file);
-    await this.s3.send(
-      new PutObjectCommand({ Bucket: this.bucket, Key: id, Body: compressed }),
-    );
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: id,
+    });
 
     await this.files.createOne({
       id,
       filename,
-      size,
-      uploaderId: uploaderId,
+      uploaderId,
     });
 
-    return id;
+    const url = await getSignedUrl(this.s3, command, { expiresIn: 3600 });
+
+    return {
+      id,
+      url,
+    };
+  }
+
+  async getDownloadUrl(id: string) {
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: id,
+    });
+
+    const signedUrl = await getSignedUrl(this.s3, command, { expiresIn: 3600 });
+
+    return signedUrl;
   }
 
   async download(id: string): Promise<Readable> {

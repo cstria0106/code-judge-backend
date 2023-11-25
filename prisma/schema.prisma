@@ -67,7 +67,6 @@ model Problem {
 model File {
   id         String @id
   filename   String
-  size       Int
   uploader   User   @relation(fields: [uploaderId], references: [id])
   uploaderId String
 }

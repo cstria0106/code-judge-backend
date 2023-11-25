@@ -1,4 +1,4 @@
-import { TypedParam, TypedQuery, TypedRoute } from '@nestia/core';
+import { TypedBody, TypedParam, TypedQuery, TypedRoute } from '@nestia/core';
 import { Body, Controller, ForbiddenException } from '@nestjs/common';
 
 import { JwtPayload } from '../jwt/jwt.service';
@@ -203,7 +203,7 @@ export class SubmitController {
   @TypedRoute.Post()
   async create(
     @User() user: JwtPayload,
-    @Body() body: SubmitController.create.Body,
+    @TypedBody() body: SubmitController.create.Body,
   ): Promise<SubmitController.create.Response> {
     return this.submit
       .create({
