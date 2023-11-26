@@ -1,6 +1,7 @@
 import {
   CreateBucketCommand,
   DeleteObjectCommand,
+  FilterRuleName,
   GetObjectCommand,
   HeadBucketCommand,
   PutObjectCommand,
@@ -18,7 +19,6 @@ import { InjectAws } from 'aws-sdk-v3-nest';
 import { randomUUID } from 'crypto';
 import { LRUCache } from 'lru-cache';
 import { Readable } from 'stream';
-import { promisify } from 'util';
 import zlib from 'zlib';
 
 import { FileRepository } from './file.repository';
@@ -48,11 +48,7 @@ export class StorageService implements OnModuleInit {
     }
   }
 
-  async getUploadUrl(
-    uploaderId: string,
-    filename: string,
-    keyPrefix?: string,
-  ): Promise<{ id: string; url: string }> {
+  async create(uploaderId: string, filename: string, keyPrefix?: string) {
     const id = `${keyPrefix ?? ''}${randomUUID()}`;
 
     const command = new PutObjectCommand({
@@ -66,23 +62,33 @@ export class StorageService implements OnModuleInit {
       uploaderId,
     });
 
-    const url = await getSignedUrl(this.s3, command, { expiresIn: 3600 });
+    const uploadUrl = await getSignedUrl(this.s3, command, { expiresIn: 3600 });
 
     return {
       id,
-      url,
+      uploadUrl,
     };
   }
 
-  async getDownloadUrl(id: string) {
+  async get(id: string) {
+    const file = await this.files.findOneOrThrow({
+      id,
+    });
+
     const command = new GetObjectCommand({
       Bucket: this.bucket,
       Key: id,
     });
 
-    const signedUrl = await getSignedUrl(this.s3, command, { expiresIn: 3600 });
+    const downloadUrl = await getSignedUrl(this.s3, command, {
+      expiresIn: 3600,
+    });
 
-    return signedUrl;
+    return {
+      id: file.id,
+      filename: file.filename,
+      downloadUrl,
+    };
   }
 
   async download(id: string): Promise<Readable> {

@@ -8,7 +8,7 @@ import { User } from '../jwt/user.decorator';
 import { StorageService } from './storage.service';
 
 export module StorageController {
-  export module getUploadUrl {
+  export module create {
     export type Body = {
       filename: string;
       keyPrefix?: string;
@@ -16,13 +16,15 @@ export module StorageController {
 
     export type Response = {
       id: string;
-      url: string;
+      uploadUrl: string;
     };
   }
 
-  export module getDownloadUrl {
+  export module get {
     export type Response = {
-      url: string;
+      id: string;
+      filename: string;
+      downloadUrl: string;
     };
   }
 }
@@ -33,20 +35,18 @@ export class StorageController {
 
   @Roles(['ADMIN'])
   @TypedRoute.Post()
-  async getUploadUrl(
+  async create(
     @User() user: JwtPayload,
-    @TypedBody() body: StorageController.getUploadUrl.Body,
-  ): Promise<StorageController.getUploadUrl.Response> {
-    typia.assert(body);
-
-    return this.storage.getUploadUrl(user.id, body.filename, body.keyPrefix);
+    @TypedBody() body: StorageController.create.Body,
+  ): Promise<StorageController.create.Response> {
+    return this.storage.create(user.id, body.filename, body.keyPrefix);
   }
 
   @Roles(['ADMIN'])
   @TypedRoute.Get(':id')
-  async getDownloadUrl(
+  async get(
     @TypedParam('id') id: string,
-  ): Promise<StorageController.getDownloadUrl.Response> {
-    return { url: await this.storage.getDownloadUrl(id) };
+  ): Promise<StorageController.get.Response> {
+    return this.storage.get(id);
   }
 }
