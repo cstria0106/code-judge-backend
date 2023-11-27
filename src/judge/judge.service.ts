@@ -123,6 +123,7 @@ export class JudgeService {
 
       const fail = () => {
         resolved = true;
+        succeed = false;
         resolve({ ok: false });
       };
 

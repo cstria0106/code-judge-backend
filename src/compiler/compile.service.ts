@@ -199,18 +199,6 @@ export class CompilerService {
 
     await container.remove();
 
-    console.log(
-      Object.fromEntries(
-        await Promise.all(
-          buildFiles.map((file) =>
-            glob(path.resolve(tmp, file)).then((files) =>
-              files.map((file) => [path.relative(tmp, file), file]),
-            ),
-          ),
-        ),
-      ),
-    );
-
     return {
       type: 'SUCCESS',
       files: Object.fromEntries(
