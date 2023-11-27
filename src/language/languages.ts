@@ -8,16 +8,16 @@ type Languages = Record<
       command: readonly string[];
       transforms?: readonly (
         | {
-          type: 'replace_string';
-          targets: readonly string[];
-          from: string;
-          to: string;
-        }
+            type: 'replace_string';
+            targets: readonly string[];
+            from: string;
+            to: string;
+          }
         | {
-          type: 'rename_file';
-          target: string;
-          to: string;
-        }
+            type: 'rename_file';
+            target: string;
+            to: string;
+          }
       )[];
       environments?: Record<string, string>;
     };
@@ -155,8 +155,9 @@ export const languages: Languages = {
     buildFiles: [
       'Main.class',
       'Solution.class',
+      'Solution$*.class',
       '_{{SUBMIT_ID}}_Judge.class',
-      '_{{SUBMIT_ID}}_Judge$Reader.class',
+      '_{{SUBMIT_ID}}_Judge$*.class',
     ],
     memoryLimitAdvantage: (limit) =>
       limit + BigInt(200) * BigInt(1000) * BigInt(1000), // 200MB
