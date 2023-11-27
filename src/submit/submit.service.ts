@@ -1,11 +1,17 @@
 import { AmqpConnection, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { Observable, Subject, finalize, map, merge, of, takeWhile } from 'rxjs';
 import typia from 'typia';
 
 import { Artifacts } from '../problem/artifacts';
 import { ProblemService } from '../problem/problem.service';
 import { Language } from '../problem/template';
+import { UserRepository } from '../user/user.repository';
 import { tryTypia } from '../util/try-typia';
 import { SubmitStatus } from './status';
 import { SubmitWorkerService } from './submit-worker.service';
@@ -143,6 +149,7 @@ export class SubmitService {
   constructor(
     private readonly submits: SubmitRepository,
     private readonly problem: ProblemService,
+    private readonly users: UserRepository,
 
     private readonly amqp: AmqpConnection,
   ) {}
@@ -261,6 +268,19 @@ export class SubmitService {
     data: SubmitService.create.Data,
   ): Promise<SubmitService.create.Result> {
     const { problem } = await this.problem.manageGet(data.problemId);
+
+    // Check date and permission
+    if (
+      problem.startTime === null ||
+      Date.now() < problem.startTime.valueOf()
+    ) {
+      const role = await this.users
+        .findOneOrThrow({ id: data.userId })
+        .then((user) => user.role);
+      if (role !== 'ADMIN') {
+        throw new NotFoundException('Problem not found');
+      }
+    }
 
     // Check judge code and input
     const judgeCode = problem.templates.judge[data.language];
