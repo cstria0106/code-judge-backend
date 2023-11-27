@@ -79,5 +79,4 @@ void judge_fail()
 void judge_success()
 {
     judge_print("SUCCESS", "%ld", now() - judge_start_time);
-    exit(0);
 }
