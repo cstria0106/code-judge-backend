@@ -32,13 +32,15 @@ export module SubmitController {
   export module manageList {
     export type Query = {
       searchId?: string;
-      skip?: number;
       userId?: string;
       problemId?: string;
+      language?: Language;
       statusType?: SubmitStatus['type'];
       statusResultType?: (SubmitStatus & {
         type: 'COMPLETE';
       })['result']['type'];
+      skip?: number;
+      take?: number;
     };
 
     export type Response = {
@@ -56,6 +58,7 @@ export module SubmitController {
         status: SubmitStatus;
         createdAt: Date;
         debugText: string;
+        code: string;
       }[];
     };
   }
@@ -143,14 +146,16 @@ export class SubmitController {
           id: query.searchId,
         },
         userId: query.userId,
-        skip: query.skip,
         problemId: bigint(query.problemId),
+        language: query.language,
         status: {
           type: query.statusType,
           result: {
             type: query.statusResultType,
           },
         },
+        skip: query.skip,
+        take: query.take,
       })
       .then((result) => ({
         submits: result.submits.map((submit) => ({

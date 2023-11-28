@@ -12,6 +12,7 @@ export module SubmitRepository {
     id?: string;
     userId?: string;
     problemId?: bigint;
+    language?: Language;
     status?: {
       type?: SubmitStatus['type'];
       typeIsNot?: SubmitStatus['type'];
@@ -19,6 +20,7 @@ export module SubmitRepository {
         type?: (SubmitStatus & { type: 'COMPLETE' })['result']['type'];
       };
     };
+    idContains?: string;
   };
 
   export module findOne {
@@ -57,6 +59,7 @@ export module SubmitRepository {
       status: SubmitStatus;
       createdAt: Date;
       debugText: string;
+      code: string
     };
   }
 
@@ -86,36 +89,47 @@ export module SubmitRepository {
 
 @Injectable()
 export class SubmitRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   private where(criteria: SubmitRepository.Criteria): Prisma.SubmitWhereInput {
     return {
       id: criteria.id,
+      problemId: criteria.problemId,
       userId: criteria.userId,
-      ...(criteria.status?.type !== undefined
-        ? {
+      language: criteria.language,
+      AND: [
+        ...(criteria.status?.type !== undefined
+          ? [{
             status: {
               path: '$.type',
               equals: criteria.status.type,
             },
-          }
-        : undefined),
-      ...(criteria.status?.typeIsNot !== undefined
-        ? {
+          }]
+          : []),
+        ...(criteria.status?.typeIsNot !== undefined
+          ? [{
             status: {
               path: '$.type',
               not: criteria.status.typeIsNot,
             },
-          }
-        : undefined),
-      ...(criteria.status?.result?.type !== undefined
-        ? {
+          }]
+          : []),
+        ...(criteria.status?.result?.type !== undefined
+          ? [{
             status: {
               path: '$.result.type',
-              equals: criteria.status.type,
+              equals: criteria.status.result.type,
             },
-          }
-        : undefined),
+          }]
+          : []),
+      ],
+      ...(criteria.idContains !== undefined
+        ? {
+          id: {
+            contains: criteria.idContains,
+          },
+        } : undefined
+      )
     };
   }
 
@@ -151,10 +165,10 @@ export class SubmitRepository {
       .then((submit) =>
         submit !== null
           ? {
-              ...submit,
-              language: typia.assert<Language>(submit.language),
-              status: typia.assert<SubmitStatus>(submit.status),
-            }
+            ...submit,
+            language: typia.assert<Language>(submit.language),
+            status: typia.assert<SubmitStatus>(submit.status),
+          }
           : submit,
       );
   }
@@ -185,6 +199,7 @@ export class SubmitRepository {
             select: { id: true, name: true },
           },
           debugText: true,
+          code: true,
         },
         orderBy: { createdAt: 'desc' },
         skip: options.skip,

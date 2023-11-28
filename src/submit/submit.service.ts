@@ -58,6 +58,7 @@ export module SubmitService {
         status: SubmitStatus;
         createdAt: Date;
         debugText: string;
+        code: string;
       }[];
     };
   }
@@ -174,23 +175,27 @@ export class SubmitService {
     };
     userId?: string;
     problemId?: bigint;
-    skip?: number;
+    language?: Language;
     status?: {
       type?: SubmitStatus['type'];
       result?: {
         type?: (SubmitStatus & { type: 'COMPLETE' })['result']['type'];
       };
     };
+    skip?: number;
+    take?: number;
   }): Promise<SubmitService.manageList.Result> {
     const submits = await this.submits.findMany(
       {
         userId: options.userId,
         problemId: options.problemId,
         status: options.status,
+        language: options.language,
+        ...(options.search?.id && { idContains: options.search.id }),
       },
       {
         skip: options.skip,
-        take: 50,
+        take: options.take,
       },
     );
     return { submits };
