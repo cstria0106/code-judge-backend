@@ -6,8 +6,6 @@ import { markedHighlight } from 'marked-highlight';
 import { FileRepository } from '../storage/file.repository';
 import { StorageService } from '../storage/storage.service';
 import { UserRepository } from '../user/user.repository';
-import { bigint } from '../util/bigint';
-import { ensure } from '../util/ensure';
 import { Artifacts } from './artifacts';
 import { exampleTemplate } from './example-template';
 import { ProblemRepository } from './problem.repository';

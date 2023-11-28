@@ -1,8 +1,16 @@
 import { TypedBody, TypedParam, TypedQuery, TypedRoute } from '@nestia/core';
-import { Controller } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Language } from 'highlight.js';
 
+import { JwtPayload } from '../jwt/jwt.service';
 import { Roles } from '../jwt/roles.decorator';
+import { User } from '../jwt/user.decorator';
+import { UserRepository } from '../user/user.repository';
 import { bigint } from '../util/bigint';
 import { Artifacts } from './artifacts';
 import { ProblemService } from './problem.service';
@@ -111,7 +119,10 @@ export module ProblemController {
 
 @Controller('problem')
 export class ProblemController {
-  constructor(private readonly problem: ProblemService) {}
+  constructor(
+    private readonly problem: ProblemService,
+    private readonly users: UserRepository,
+  ) {}
 
   @Roles(['ADMIN'])
   @TypedRoute.Get('manage/:id')
@@ -196,14 +207,33 @@ export class ProblemController {
 
   @TypedRoute.Get(':id')
   async get(
+    @User() user: JwtPayload,
     @TypedParam('id', 'string') id: string,
   ): Promise<ProblemController.get.Response> {
-    return this.problem.get(bigint(id, 'id')).then((result) => ({
+    const problem = await this.problem
+      .get(bigint(id, 'id'))
+      .then((result) => result.problem);
+
+    // restrict viewer permission to ADMIN
+    // when problem is not started yet
+    if (
+      problem.startTime === null ||
+      Date.now() < problem.startTime.valueOf()
+    ) {
+      const role = await this.users
+        .findOneOrThrow({ id: user.id })
+        .then((user) => user.role);
+      if (role !== 'ADMIN') {
+        throw new NotFoundException('Problem not found');
+      }
+    }
+
+    return {
       problem: {
-        ...result.problem,
-        id: result.problem.id.toString(),
-        memoryLimit: Number(result.problem.memoryLimit),
+        ...problem,
+        id: problem.id.toString(),
+        memoryLimit: Number(problem.memoryLimit),
       },
-    }));
+    };
   }
 }

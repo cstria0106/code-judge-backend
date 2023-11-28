@@ -241,6 +241,4 @@ $RECYCLE.BIN/
 
 /.tmp
 
-/.env.docker
-/.env.worker
-/.envrc
+/.env*

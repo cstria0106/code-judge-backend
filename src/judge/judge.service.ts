@@ -123,6 +123,7 @@ export class JudgeService {
 
       const fail = () => {
         resolved = true;
+        succeed = false;
         resolve({ ok: false });
       };
 
@@ -132,6 +133,22 @@ export class JudgeService {
       };
 
       const onJudgeMessage = (message: string) => {
+        // Success
+        const timeMatch = message.match(/^SUCCESS (\d+)$/);
+        if (timeMatch !== null) {
+          succeed = true;
+          ended = true;
+          time = Number(timeMatch[1]);
+
+          return;
+        }
+
+        // Any message after success is not allowed
+        if (succeed) {
+          this.logger.warn(`[${submitId}] Invalid message printed: ${message}`);
+          return fail();
+        }
+
         // Debug
         const debugMatch = message.match(/^DEBUG (.+)$/);
         if (debugMatch !== null) {
@@ -158,16 +175,6 @@ export class JudgeService {
         if (message === 'FAIL') {
           ended = true;
           return fail();
-        }
-
-        // Success
-        const timeMatch = message.match(/^SUCCESS (\d+)$/);
-        if (timeMatch !== null) {
-          succeed = true;
-          ended = true;
-          time = Number(timeMatch[1]);
-
-          return;
         }
 
         // Otherwise it's invalid message

@@ -1,11 +1,13 @@
 import {
   CreateBucketCommand,
   DeleteObjectCommand,
+  FilterRuleName,
   GetObjectCommand,
   HeadBucketCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {
   Injectable,
   InternalServerErrorException,
@@ -17,7 +19,6 @@ import { InjectAws } from 'aws-sdk-v3-nest';
 import { randomUUID } from 'crypto';
 import { LRUCache } from 'lru-cache';
 import { Readable } from 'stream';
-import { promisify } from 'util';
 import zlib from 'zlib';
 
 import { FileRepository } from './file.repository';
@@ -47,28 +48,47 @@ export class StorageService implements OnModuleInit {
     }
   }
 
-  async upload(
-    file: Buffer,
-    filename: string,
-    size: number,
-    uploaderId: string,
-    idPrefix?: string,
-  ): Promise<string> {
-    const id = `${idPrefix ?? ''}${randomUUID()}`;
+  async create(uploaderId: string, filename: string, keyPrefix?: string) {
+    const id = `${keyPrefix ?? ''}${randomUUID()}`;
 
-    const compressed = await promisify(zlib.gzip)(file);
-    await this.s3.send(
-      new PutObjectCommand({ Bucket: this.bucket, Key: id, Body: compressed }),
-    );
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: id,
+    });
 
     await this.files.createOne({
       id,
       filename,
-      size,
-      uploaderId: uploaderId,
+      uploaderId,
     });
 
-    return id;
+    const uploadUrl = await getSignedUrl(this.s3, command, { expiresIn: 3600 });
+
+    return {
+      id,
+      uploadUrl,
+    };
+  }
+
+  async get(id: string) {
+    const file = await this.files.findOneOrThrow({
+      id,
+    });
+
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: id,
+    });
+
+    const downloadUrl = await getSignedUrl(this.s3, command, {
+      expiresIn: 3600,
+    });
+
+    return {
+      id: file.id,
+      filename: file.filename,
+      downloadUrl,
+    };
   }
 
   async download(id: string): Promise<Readable> {

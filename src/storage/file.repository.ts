@@ -12,7 +12,6 @@ export module FileRepository {
     export type File = {
       id: string;
       filename: string;
-      size: number;
       uploaderId: string;
     };
   }
@@ -20,7 +19,6 @@ export module FileRepository {
     export type Data = {
       id: string;
       filename: string;
-      size: number;
       uploaderId: string;
     };
   }

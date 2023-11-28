@@ -23,7 +23,6 @@ public class Judge {
 
     public void success() {
         print("SUCCESS", "%d", System.currentTimeMillis() - startTime);
-        System.exit(0);
     }
 
     public void printf(String format, Object... args) {

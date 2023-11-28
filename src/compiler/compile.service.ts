@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Docker from 'dockerode';
 import fs from 'fs/promises';
+import { glob } from 'glob';
 import MemoryStream from 'memorystream';
 import { mkdirp } from 'mkdirp';
 import PQueue from 'p-queue-compat';
@@ -201,7 +202,13 @@ export class CompilerService {
     return {
       type: 'SUCCESS',
       files: Object.fromEntries(
-        buildFiles.map((file) => [file, path.resolve(tmp, file)]),
+        await Promise.all(
+          buildFiles.map((file) =>
+            glob(path.resolve(tmp, file)).then((files) =>
+              files.map((file) => [path.relative(tmp, file), file]),
+            ),
+          ),
+        ).then((result) => result.flat()),
       ),
     };
   }
