@@ -13,6 +13,7 @@ export module SubmitController {
   export module list {
     export type Query = {
       skip?: number;
+      take?: 20;
     };
 
     export type Response = {
@@ -26,6 +27,7 @@ export module SubmitController {
         status: SubmitStatus;
         createdAt: Date;
       }[];
+      count: number;
     };
   }
 
@@ -125,15 +127,18 @@ export class SubmitController {
     @User() user: JwtPayload,
     @TypedQuery() query: SubmitController.list.Query,
   ): Promise<SubmitController.list.Response> {
-    return this.submit.list(user.id, { skip: query.skip }).then((result) => ({
-      submits: result.submits.map((submit) => ({
-        ...submit,
-        problem: {
-          ...submit.problem,
-          id: submit.problem.id.toString(),
-        },
-      })),
-    }));
+    return this.submit
+      .list(user.id, { skip: query.skip, take: query.take })
+      .then((result) => ({
+        submits: result.submits.map((submit) => ({
+          ...submit,
+          problem: {
+            ...submit.problem,
+            id: submit.problem.id.toString(),
+          },
+        })),
+        count: result.count,
+      }));
   }
 
   @Roles(['ADMIN'])

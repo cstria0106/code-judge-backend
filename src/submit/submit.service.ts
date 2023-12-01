@@ -45,6 +45,7 @@ export module SubmitService {
         status: SubmitStatus;
         createdAt: Date;
       }[];
+      count: number;
     };
   }
 
@@ -160,6 +161,7 @@ export class SubmitService {
     userId: string,
     options: {
       skip?: number;
+      take?: 20;
       userId?: string;
     },
   ): Promise<SubmitService.list.Result> {
@@ -167,10 +169,12 @@ export class SubmitService {
       { userId },
       {
         skip: options.skip,
-        take: 20,
+        take: options.take ?? 20,
       },
     );
-    return { submits };
+
+    const count = await this.submits.count({ userId });
+    return { submits, count };
   }
 
   async get(id: string) {
