@@ -75,6 +75,7 @@ export module SubmitService {
     export type Options = {
       id?: string;
       skip?: number;
+      take?: number;
     };
 
     export type InitialEvent = {
@@ -89,6 +90,7 @@ export module SubmitService {
         status: SubmitStatus;
         createdAt: Date;
       }[];
+      count: number;
     };
 
     export type DetailEvent = {
@@ -230,8 +232,10 @@ export class SubmitService {
             { userId },
             {
               skip: options.skip,
+              take: options.take ?? 20,
             },
           ),
+          count: await this.submits.count({ userId }),
         } as const);
 
     const incompleteSubmits = (

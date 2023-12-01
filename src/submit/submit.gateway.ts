@@ -23,6 +23,7 @@ export module SubmitGateway {
     export type Options = {
       id?: string;
       skip?: number;
+      take?: 20;
     };
 
     export type UpdateData = {
@@ -43,6 +44,7 @@ export module SubmitGateway {
         };
         createdAt: Date;
       }[];
+      count: number;
     };
 
     export type DetailData = {
@@ -110,6 +112,7 @@ export class SubmitGateway {
                     id: submit.problem.id.toString(),
                   },
                 })),
+                count: e.count,
               },
             }))
             .with({ type: 'update' }, (e) => ({
