@@ -66,6 +66,7 @@ export module SubmitService {
         debugText: string;
         code: string;
       }[];
+      count: number;
     };
   }
 
@@ -192,20 +193,19 @@ export class SubmitService {
     skip?: number;
     take?: number;
   }): Promise<SubmitService.manageList.Result> {
-    const submits = await this.submits.findMany(
-      {
-        userId: options.userId,
-        problemId: options.problemId,
-        status: options.status,
-        language: options.language,
-        ...(options.search?.id && { idContains: options.search.id }),
-      },
-      {
-        skip: options.skip,
-        take: options.take,
-      },
-    );
-    return { submits };
+    const criteria = {
+      userId: options.userId,
+      problemId: options.problemId,
+      status: options.status,
+      language: options.language,
+      ...(options.search?.id && { idContains: options.search.id }),
+    };
+    const submits = await this.submits.findMany(criteria, {
+      skip: options.skip,
+      take: options.take ?? 50,
+    });
+    const count = await this.submits.count(criteria);
+    return { submits, count };
   }
 
   async subscribe(

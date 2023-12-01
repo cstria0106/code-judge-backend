@@ -60,6 +60,7 @@ export module SubmitController {
         debugText: string;
         code: string;
       }[];
+      count: number;
     };
   }
 
@@ -165,6 +166,7 @@ export class SubmitController {
             id: submit.problem.id.toString(),
           },
         })),
+        count: result.count,
       }));
   }
 
