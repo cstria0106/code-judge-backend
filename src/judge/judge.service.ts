@@ -234,7 +234,8 @@ export class JudgeService {
 
     // Pipe stdin, stdout
     container.modem.demuxStream(stream, output, output); // Container stdout, stderr => Output stream
-    input.pipe(stream); // Input string => Container stdin
+    const pipe = input.pipe(stream); // Input string => Container stdin
+    pipe.on('error', () => {}); // Ignore EPIPE error
 
     // Start container
     await container.start();
