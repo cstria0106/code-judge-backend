@@ -1,5 +1,10 @@
-import { AmqpConnection, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
+import {
+  AmqpConnection,
+  RabbitRPC,
+  RabbitSubscribe,
+} from '@golevelup/nestjs-rabbitmq';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { Subject, throttleTime } from 'rxjs';
 import { Readable } from 'stream';
 import { match } from 'ts-pattern';
@@ -9,20 +14,31 @@ import { CompilerService } from '../compiler/compile.service';
 import { JudgeService } from '../judge/judge.service';
 import { Artifacts } from '../problem/artifacts';
 import { ProblemService } from '../problem/problem.service';
+import { Language } from '../problem/template';
 import { StorageService } from '../storage/storage.service';
+import { bigint } from '../util/bigint';
 import { tryTypia } from '../util/try-typia';
 import { SubmitStatus } from './status';
 import { SubmitRepository } from './submit.repository';
 import { SubmitService } from './submit.service';
 
-export module SubmitWorkerService {
-  export module startProcess {
-    export type Data = {
-      submitId: string;
-      inputId: keyof Artifacts['inputs'];
-    };
-  }
+export module StartProcess {
+  export type Data = {
+    submitId: string;
+    inputId: keyof Artifacts['inputs'];
+  };
 }
+
+export module Process {
+  export type Data = {
+    problemId: string;
+    code: string;
+    language: Language;
+    inputId: keyof Artifacts['inputs'];
+  };
+}
+
+export type SubmitResult = SubmitStatus & { debugText: string | null };
 
 @Injectable()
 export class SubmitWorkerService {
@@ -83,6 +99,106 @@ export class SubmitWorkerService {
     }
   }
 
+  private async processSubmit(
+    submitId: string,
+    data: {
+      problemId: bigint;
+      code: string;
+      language: Language;
+      inputId: string;
+    },
+    onStatusUpdate?: (status: SubmitStatus) => void,
+  ): Promise<SubmitResult> {
+    const { problem } = await this.problem.manageGet(data.problemId);
+
+    // Get judge code
+    const judgeCode = problem.templates.judge[data.language];
+    if (judgeCode === undefined) {
+      throw new BadRequestException(
+        'Invalid language. This problem does not support the language.',
+      );
+    }
+
+    const input = problem.artifacts.inputs[data.inputId];
+
+    const compileResult = await this.compiler.enqueue(
+      submitId,
+      data.language,
+      judgeCode,
+      data.code,
+      () => {
+        onStatusUpdate?.(SubmitStatus.compiling());
+      },
+    );
+
+    const result = await match(compileResult)
+      .with({ type: 'SUCCESS' }, async ({ files }) => {
+        const judgeResult = await this.judge.enqueue(
+          submitId,
+          data.language,
+          files,
+          // Empty if input is not defined
+          input === null || input === undefined
+            ? Readable.from([])
+            : await this.storage.download(input),
+          problem.timeLimit,
+          problem.memoryLimit,
+          () => {
+            onStatusUpdate?.(SubmitStatus.running(0));
+          },
+          (progress) => {
+            onStatusUpdate?.(SubmitStatus.running(progress));
+          },
+        );
+
+        return match(judgeResult)
+          .with({ type: 'SUCCESS' }, ({ memory, time, debugText }) => ({
+            status: SubmitStatus.success(memory, time),
+            debugText,
+          }))
+          .with({ type: 'FAILED' }, ({ reason }) => ({
+            status: SubmitStatus.failed(reason),
+          }))
+          .exhaustive();
+      })
+      .with({ type: 'FAILED' }, async ({ message }) => ({
+        status: SubmitStatus.compileError(message),
+      }))
+      .with({ type: 'NO_RESOURCE' }, async () => ({
+        status: SubmitStatus.compileError('No resource'),
+      }))
+      .exhaustive();
+
+    onStatusUpdate?.(result.status);
+    return {
+      ...result.status,
+      debugText: 'debugText' in result ? result.debugText : null,
+    };
+  }
+
+  // doJudge RPC wrapper
+  @RabbitRPC({
+    exchange: 'submitWorker.loadBalancer',
+    routingKey: 'submitWorker.process',
+    queue: 'submitWorker.process',
+    queueOptions: {
+      durable: true,
+    },
+    createQueueIfNotExists: true,
+  })
+  async process(rawData: unknown): Promise<SubmitResult> {
+    const data = await tryTypia(async () =>
+      typia.assert<Process.Data>(rawData),
+    );
+
+    return this.processSubmit(randomUUID(), {
+      ...data,
+      problemId: bigint(data.problemId),
+    });
+  }
+
+  // Judge Pub/Sub
+  // Start process submit
   @RabbitSubscribe({
     exchange: 'submitWorker.loadBalancer',
     routingKey: 'submitWorker.startProcess',
@@ -95,7 +211,7 @@ export class SubmitWorkerService {
   async startProcess(rawData: unknown) {
     try {
       const data = await tryTypia(async () =>
-        typia.assert<SubmitWorkerService.startProcess.Data>(rawData),
+        typia.assert<StartProcess.Data>(rawData),
       );
 
       this.logger.log(`Starting to process submit (${data.submitId})`);
@@ -107,81 +223,18 @@ export class SubmitWorkerService {
         },
       });
 
-      try {
-        const { problem } = await this.problem.manageGet(submit.problem.id);
-
-        // Get judge code
-        const judgeCode = problem.templates.judge[submit.language];
-        if (judgeCode === undefined) {
-          throw new BadRequestException(
-            'Invalid language. This problem does not support the language.',
-          );
-        }
-
-        const input = problem.artifacts.inputs[data.inputId ?? 'public'];
-
-        const compileResult = await this.compiler.enqueue(
-          submit.id,
-          submit.language,
-          judgeCode,
-          submit.code,
-          async () => {
-            this.publishStatus(submit.id, SubmitStatus.compiling());
-          },
-        );
-
-        match(compileResult)
-          .with({ type: 'SUCCESS' }, async ({ files }) => {
-            const judgeResult = await this.judge.enqueue(
-              submit.id,
-              submit.language,
-              files,
-              // Empty if input is not defined
-              input === null || input === undefined
-                ? Readable.from([])
-                : await this.storage.download(input),
-              submit.problem.timeLimit,
-              submit.problem.memoryLimit,
-              () => {
-                this.publishStatus(submit.id, SubmitStatus.running(0));
-              },
-              (progress) => {
-                this.publishStatus(submit.id, SubmitStatus.running(progress));
-              },
-            );
-
-            // Update debug text
-            await this.submits.update(submit.id, {
-              debugText: judgeResult.debugText,
-            });
-
-            // Update status
-            this.publishStatus(
-              submit.id,
-              match(judgeResult)
-                .with({ type: 'SUCCESS' }, ({ memory, time }) =>
-                  SubmitStatus.success(memory, time),
-                )
-                .with({ type: 'FAILED' }, ({ reason }) =>
-                  SubmitStatus.failed(reason),
-                )
-                .exhaustive(),
-            );
-          })
-          .with({ type: 'FAILED' }, async ({ message }) => {
-            this.publishStatus(submit.id, SubmitStatus.compileError(message));
-          })
-          .with({ type: 'NO_RESOURCE' }, async () => {
-            this.publishStatus(
-              submit.id,
-              SubmitStatus.compileError('No resource'),
-            );
-          })
-          .exhaustive();
-      } catch (e) {
-        this.logger.error(e);
-        this.publishStatus(submit.id, SubmitStatus.unknownError());
-      }
+      await this.processSubmit(
+        submit.id,
+        {
+          problemId: submit.problem.id,
+          code: submit.code,
+          language: submit.language,
+          inputId: data.inputId,
+        },
+        (status) => {
+          this.publishStatus(submit.id, status);
+        },
+      );
     } catch (e) {
       this.logger.error(e);
       return;

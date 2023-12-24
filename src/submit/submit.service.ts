@@ -14,7 +14,7 @@ import { Language } from '../problem/template';
 import { UserRepository } from '../user/user.repository';
 import { tryTypia } from '../util/try-typia';
 import { SubmitStatus } from './status';
-import { SubmitWorkerService } from './submit-worker.service';
+import { Process, StartProcess, SubmitResult } from './submit-worker.service';
 import { SubmitRepository } from './submit.repository';
 
 export module SubmitService {
@@ -312,18 +312,33 @@ export class SubmitService {
       },
     });
 
-    // Start judge
     await this.startJudge(submit.id, 'public');
-
     return { submit };
   }
 
-  async startJudge(submitId: string, inputId: keyof Artifacts['inputs']) {
+  private async startJudge(
+    submitId: string,
+    inputId: keyof Artifacts['inputs'],
+  ) {
     await this.amqp.publish(
       'submitWorker.loadBalancer',
       'submitWorker.startProcess',
-      { submitId, inputId } satisfies SubmitWorkerService.startProcess.Data,
+      { submitId, inputId } satisfies StartProcess.Data,
     );
+  }
+
+  // Create temporary submit and get result immediately
+  async createTemporary(data: {
+    problemId: string;
+    code: string;
+    language: Language;
+    inputId: keyof Artifacts['inputs'];
+  }): Promise<SubmitResult> {
+    return this.amqp.request<SubmitResult>({
+      exchange: 'submitWorker.loadBalancer',
+      routingKey: 'submitWorker.process',
+      payload: data satisfies Process.Data,
+    });
   }
 
   // Set all incomplete submits to be complete (unknown error)

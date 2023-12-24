@@ -4,6 +4,7 @@ import { Body, Controller, ForbiddenException } from '@nestjs/common';
 import { JwtPayload } from '../jwt/jwt.service';
 import { Roles } from '../jwt/roles.decorator';
 import { User } from '../jwt/user.decorator';
+import { Artifacts } from '../problem/artifacts';
 import { Language } from '../problem/template';
 import { bigint } from '../util/bigint';
 import { SubmitStatus } from './status';
@@ -118,6 +119,18 @@ export module SubmitController {
   }
 }
 
+export module ManageJudge {
+  export type Body = {
+    problemId: string;
+    code: string;
+    language: Language;
+    inputId: keyof Artifacts['inputs'];
+  };
+  export type Response = {
+    result: SubmitStatus;
+  };
+}
+
 @Controller('submit')
 export class SubmitController {
   constructor(private readonly submit: SubmitService) {}
@@ -229,5 +242,15 @@ export class SubmitController {
           id: result.submit.id.toString(),
         },
       }));
+  }
+
+  @TypedRoute.Post('manage/judge')
+  async manageJudge(
+    @TypedBody() body: ManageJudge.Body,
+  ): Promise<ManageJudge.Response> {
+    const result = await this.submit.createTemporary(body);
+    return {
+      result,
+    };
   }
 }
