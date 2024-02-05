@@ -160,7 +160,7 @@ export class ProblemService {
 
   async get(
     id: bigint,
-    options?: { userId: string },
+    options: { userId?: string } = {},
   ): Promise<ProblemService.get.Result> {
     const now = new Date();
     let problem = await this.problems.findOneOrThrow({
@@ -169,7 +169,7 @@ export class ProblemService {
 
     // Allow admin to get problem before start
     if (problem.startTime !== null && problem.startTime > now) {
-      if (options?.userId === undefined) {
+      if (options.userId === undefined) {
         throw new NotFoundException('problem not found');
       }
 

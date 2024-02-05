@@ -12,6 +12,7 @@ import { Artifacts } from '../problem/artifacts';
 import { ProblemService } from '../problem/problem.service';
 import { Language } from '../problem/template';
 import { UserRepository } from '../user/user.repository';
+import { bigint } from '../util/bigint';
 import { tryTypia } from '../util/try-typia';
 import { SubmitStatus } from './status';
 import { Process, StartProcess, SubmitResult } from './submit-worker.service';
@@ -338,6 +339,7 @@ export class SubmitService {
       exchange: 'submitWorker.loadBalancer',
       routingKey: 'submitWorker.process',
       payload: data satisfies Process.Data,
+      timeout: 1000 * 60 * 5, // 5 minutes
     });
   }
 
