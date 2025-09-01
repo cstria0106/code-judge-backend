@@ -3,8 +3,8 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CryptoService } from '../crypto/crypto.service';
 import { UserRepository } from './user.repository';
 
-export module UserService {
-  export module get {
+export namespace UserService {
+  export namespace get {
     export type Result = {
       id: string;
       name: string;
@@ -13,7 +13,7 @@ export module UserService {
     };
   }
 
-  export module manageCreate {
+  export namespace manageCreate {
     export type Data = {
       name: string;
       id: string;
@@ -23,7 +23,7 @@ export module UserService {
     };
   }
 
-  export module manageCreateMany {
+  export namespace manageCreateMany {
     export type Data = {
       users: {
         name: string;
@@ -31,21 +31,21 @@ export module UserService {
         password: string;
         shouldChangePassword: boolean;
         role: 'STUDENT' | 'ADMIN';
-      }[]
-    }
+      }[];
+    };
   }
 
-  export module manageList {
+  export namespace manageList {
     export type Result = {
       users: {
         id: string;
         name: string;
-        role: 'STUDENT' | 'ADMIN'
-      }[]
-    }
+        role: 'STUDENT' | 'ADMIN';
+      }[];
+    };
   }
 
-  export module update {
+  export namespace update {
     export type Data = {
       password?: string;
     };
@@ -57,7 +57,7 @@ export class UserService {
   constructor(
     private readonly crypto: CryptoService,
     private readonly users: UserRepository,
-  ) { }
+  ) {}
 
   async get(userId: string): Promise<UserService.get.Result> {
     const user = await this.users.findOneOrThrow({ id: userId });
@@ -78,16 +78,27 @@ export class UserService {
     });
   }
 
-  async manageCreateMany(data: UserService.manageCreateMany.Data): Promise<void> {
+  async manageCreateMany(
+    data: UserService.manageCreateMany.Data,
+  ): Promise<void> {
     await this.users.createMany({
-      users: await Promise.all(data.users.map(async user => {
-        const { name, id, shouldChangePassword, role } = user;
-        const [encryptedPassword, salt] = await this.crypto.encrypt(user.password);
+      users: await Promise.all(
+        data.users.map(async (user) => {
+          const { name, id, shouldChangePassword, role } = user;
+          const [encryptedPassword, salt] = await this.crypto.encrypt(
+            user.password,
+          );
 
-        return {
-          name, id, password: encryptedPassword, salt, shouldChangePassword, role
-        };
-      }))
+          return {
+            name,
+            id,
+            password: encryptedPassword,
+            salt,
+            shouldChangePassword,
+            role,
+          };
+        }),
+      ),
     });
   }
 
@@ -95,9 +106,9 @@ export class UserService {
     return {
       users: await this.users.findMany({
         cursor: cursor ? { id: cursor } : undefined,
-        take: 100
-      })
-    }
+        take: 100,
+      }),
+    };
   }
 
   private validatePassword(password: string) {
@@ -131,6 +142,6 @@ export class UserService {
 
   async destroy(userId: string): Promise<void> {
     const user = await this.users.findOneOrThrow({ id: userId });
-    await this.users.delete({ id: user.id })
+    await this.users.delete({ id: user.id });
   }
 }

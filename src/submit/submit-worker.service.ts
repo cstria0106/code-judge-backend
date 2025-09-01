@@ -22,14 +22,14 @@ import { SubmitStatus } from './status';
 import { SubmitRepository } from './submit.repository';
 import { SubmitService } from './submit.service';
 
-export module StartProcess {
+export namespace StartProcess {
   export type Data = {
     submitId: string;
     inputId: keyof Artifacts['inputs'];
   };
 }
 
-export module Process {
+export namespace Process {
   export type Data = {
     problemId: string;
     code: string;

@@ -12,14 +12,13 @@ import { Artifacts } from '../problem/artifacts';
 import { ProblemService } from '../problem/problem.service';
 import { Language } from '../problem/template';
 import { UserRepository } from '../user/user.repository';
-import { bigint } from '../util/bigint';
 import { tryTypia } from '../util/try-typia';
 import { SubmitStatus } from './status';
 import { Process, StartProcess, SubmitResult } from './submit-worker.service';
 import { SubmitRepository } from './submit.repository';
 
-export module SubmitService {
-  export module get {
+export namespace SubmitService {
+  export namespace get {
     export type Result = {
       submit: {
         id: string;
@@ -34,7 +33,7 @@ export module SubmitService {
     };
   }
 
-  export module list {
+  export namespace list {
     export type Result = {
       submits: {
         id: string;
@@ -50,7 +49,7 @@ export module SubmitService {
     };
   }
 
-  export module manageList {
+  export namespace manageList {
     export type Result = {
       submits: {
         id: string;
@@ -72,7 +71,7 @@ export module SubmitService {
     };
   }
 
-  export module subscribe {
+  export namespace subscribe {
     export type Options = {
       id?: string;
       skip?: number;
@@ -120,7 +119,7 @@ export module SubmitService {
     export type Event = InitialEvent | UpdateEvent | DetailEvent;
   }
 
-  export module create {
+  export namespace create {
     export type Data = {
       userId: string;
       problemId: bigint;
@@ -135,7 +134,7 @@ export module SubmitService {
     };
   }
 
-  export module publishChangeEvent {
+  export namespace publishChangeEvent {
     export type Data = {
       submitId: string;
       status: SubmitStatus;

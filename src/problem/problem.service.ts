@@ -11,8 +11,8 @@ import { exampleTemplate } from './example-template';
 import { ProblemRepository } from './problem.repository';
 import { Codes, Templates } from './template';
 
-export module ProblemService {
-  export module list {
+export namespace ProblemService {
+  export namespace list {
     export type Options = {
       cursor?: bigint;
       all?: boolean;
@@ -30,7 +30,7 @@ export module ProblemService {
     };
   }
 
-  export module get {
+  export namespace get {
     export type Result = {
       problem: {
         id: bigint;
@@ -45,7 +45,7 @@ export module ProblemService {
     };
   }
 
-  export module listSubmits {
+  export namespace listSubmits {
     export type Options = {
       onlySuccess: true;
       skip?: number;
@@ -61,7 +61,7 @@ export module ProblemService {
     }[];
   }
 
-  export module manageList {
+  export namespace manageList {
     export type Result = {
       problems: {
         id: bigint;
@@ -74,7 +74,7 @@ export module ProblemService {
     };
   }
 
-  export module manageGet {
+  export namespace manageGet {
     export type Result = {
       problem: {
         id: bigint;
@@ -90,7 +90,7 @@ export module ProblemService {
     };
   }
 
-  export module manageUpdate {
+  export namespace manageUpdate {
     export type Data = {
       name?: string;
       description?: string;
@@ -103,7 +103,7 @@ export module ProblemService {
     };
   }
 
-  export module manageCreate {
+  export namespace manageCreate {
     export type Result = {
       problem: {
         id: bigint;

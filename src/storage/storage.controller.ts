@@ -1,14 +1,13 @@
 import { TypedBody, TypedParam, TypedRoute } from '@nestia/core';
-import { Body, Controller } from '@nestjs/common';
-import typia from 'typia';
+import { Controller } from '@nestjs/common';
 
 import { JwtPayload } from '../jwt/jwt.service';
 import { Roles } from '../jwt/roles.decorator';
 import { User } from '../jwt/user.decorator';
 import { StorageService } from './storage.service';
 
-export module StorageController {
-  export module create {
+export namespace StorageController {
+  export namespace create {
     export type Body = {
       filename: string;
       keyPrefix?: string;
@@ -20,7 +19,7 @@ export module StorageController {
     };
   }
 
-  export module get {
+  export namespace get {
     export type Response = {
       id: string;
       filename: string;

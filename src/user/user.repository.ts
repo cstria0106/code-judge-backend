@@ -3,12 +3,12 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ensure } from '../util/ensure';
 
-export module UserRepository {
+export namespace UserRepository {
   export type Criteria = {
     id: string;
   };
 
-  export module findOne {
+  export namespace findOne {
     export type User = {
       name: string;
       id: string;
@@ -19,7 +19,7 @@ export module UserRepository {
     };
   }
 
-  export module findMany {
+  export namespace findMany {
     export type User = {
       name: string;
       id: string;
@@ -34,7 +34,7 @@ export module UserRepository {
     };
   }
 
-  export module createOne {
+  export namespace createOne {
     export type Data = {
       name: string;
       id: string;
@@ -45,7 +45,7 @@ export module UserRepository {
     };
   }
 
-  export module createMany {
+  export namespace createMany {
     export type Data = {
       users: {
         name: string;
@@ -58,7 +58,7 @@ export module UserRepository {
     };
   }
 
-  export module update {
+  export namespace update {
     export type Data = {
       password?: {
         encrypted: Buffer;

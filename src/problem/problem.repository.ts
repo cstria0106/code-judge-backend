@@ -6,14 +6,14 @@ import { ensure } from '../util/ensure';
 import { Artifacts } from './artifacts';
 import { Templates } from './template';
 
-export module ProblemRepository {
+export namespace ProblemRepository {
   export type Criteria = {
     id?: bigint;
     startTimeIsBefore?: Date;
     endTimeIsNullOrAfter?: Date;
   };
 
-  export module findMany {
+  export namespace findMany {
     export type Options = {
       cursor?: {
         id: bigint;
@@ -31,7 +31,7 @@ export module ProblemRepository {
     };
   }
 
-  export module findOne {
+  export namespace findOne {
     export type Problem = {
       id: bigint;
       name: string;
@@ -45,7 +45,7 @@ export module ProblemRepository {
     };
   }
 
-  export module findOneWithArtifacts {
+  export namespace findOneWithArtifacts {
     export type Problem = {
       id: bigint;
       name: string;
@@ -57,7 +57,7 @@ export module ProblemRepository {
     };
   }
 
-  export module create {
+  export namespace create {
     export type Data = {
       name: string;
       description: string;
@@ -68,7 +68,7 @@ export module ProblemRepository {
     export type Problem = { id: bigint };
   }
 
-  export module update {
+  export namespace update {
     export type Data = {
       name?: string;
       description?: string;

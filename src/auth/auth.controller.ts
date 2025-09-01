@@ -3,8 +3,8 @@ import { Controller } from '@nestjs/common';
 
 import { AuthService } from './auth.service';
 
-export module AuthController {
-  export module Login {
+export namespace AuthController {
+  export namespace Login {
     export type Body = AuthService.Login.Data;
     export type Response = AuthService.Login.Result;
   }

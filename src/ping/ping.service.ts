@@ -6,8 +6,8 @@ import typia from 'typia';
 
 import { tryTypia } from '../util/try-typia';
 
-export module PingService {
-  export module registerWorker {
+export namespace PingService {
+  export namespace registerWorker {
     export type Data = {
       id: string;
     };

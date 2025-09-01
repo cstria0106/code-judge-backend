@@ -7,7 +7,7 @@ import { Language } from '../problem/template';
 import { ensure } from '../util/ensure';
 import { SubmitStatus } from './status';
 
-export module SubmitRepository {
+export namespace SubmitRepository {
   export type Criteria = {
     id?: string;
     userId?: string;
@@ -23,7 +23,7 @@ export module SubmitRepository {
     idContains?: string;
   };
 
-  export module findOne {
+  export namespace findOne {
     export type Submit = {
       id: string;
       user: {
@@ -44,7 +44,7 @@ export module SubmitRepository {
     };
   }
 
-  export module findMany {
+  export namespace findMany {
     export type Submit = {
       id: string;
       user: {
@@ -63,7 +63,7 @@ export module SubmitRepository {
     };
   }
 
-  export module create {
+  export namespace create {
     export type Data = {
       userId: string;
       problemId: bigint;
@@ -77,7 +77,7 @@ export module SubmitRepository {
     };
   }
 
-  export module update {
+  export namespace update {
     export type Data = {
       status?: SubmitStatus;
       time?: number;

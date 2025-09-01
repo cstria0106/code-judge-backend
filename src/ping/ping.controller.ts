@@ -1,8 +1,8 @@
 import { TypedRoute } from '@nestia/core';
 import { Controller } from '@nestjs/common';
 
-export module PingController {
-  export module Ping {
+export namespace PingController {
+  export namespace Ping {
     export type Response = {
       ok: boolean;
     };

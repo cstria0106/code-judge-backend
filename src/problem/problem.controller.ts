@@ -11,8 +11,8 @@ import { Artifacts } from './artifacts';
 import { ProblemService } from './problem.service';
 import { Codes, Templates } from './template';
 
-export module ProblemController {
-  export module list {
+export namespace ProblemController {
+  export namespace list {
     export type Query = {
       cursor?: string;
       all?: boolean;
@@ -30,7 +30,7 @@ export module ProblemController {
     };
   }
 
-  export module get {
+  export namespace get {
     export type Response = {
       problem: {
         id: string;
@@ -45,7 +45,7 @@ export module ProblemController {
     };
   }
 
-  export module listSubmits {
+  export namespace listSubmits {
     export type Query = {
       onlySuccess: true;
       skip?: number;
@@ -61,7 +61,7 @@ export module ProblemController {
     };
   }
 
-  export module manageGet {
+  export namespace manageGet {
     export type Response = {
       problem: {
         id: string;
@@ -77,7 +77,7 @@ export module ProblemController {
     };
   }
 
-  export module manageList {
+  export namespace manageList {
     export type Response = {
       problems: {
         id: string;
@@ -90,7 +90,7 @@ export module ProblemController {
     };
   }
 
-  export module manageCreate {
+  export namespace manageCreate {
     export type Response = {
       problem: {
         id: string;
@@ -98,7 +98,7 @@ export module ProblemController {
     };
   }
 
-  export module manageUpdate {
+  export namespace manageUpdate {
     export type Body = {
       name?: string;
       description?: string;

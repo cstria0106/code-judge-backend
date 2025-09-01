@@ -3,19 +3,19 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ensure } from '../util/ensure';
 
-export module FileRepository {
+export namespace FileRepository {
   export type Criteria = {
     id: string;
   };
 
-  export module findOne {
+  export namespace findOne {
     export type File = {
       id: string;
       filename: string;
       uploaderId: string;
     };
   }
-  export module createOne {
+  export namespace createOne {
     export type Data = {
       id: string;
       filename: string;

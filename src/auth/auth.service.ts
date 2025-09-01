@@ -4,8 +4,8 @@ import { CryptoService } from '../crypto/crypto.service';
 import { JwtService } from '../jwt/jwt.service';
 import { UserRepository } from '../user/user.repository';
 
-export module AuthService {
-  export module Login {
+export namespace AuthService {
+  export namespace Login {
     export type Data = {
       id: string;
       password: string;

@@ -18,8 +18,8 @@ import { WsErrorResponse } from '../util/websocket';
 import { SubmitStatus } from './status';
 import { SubmitService } from './submit.service';
 
-export module SubmitGateway {
-  export module subscribe {
+export namespace SubmitGateway {
+  export namespace subscribe {
     export type Options = {
       id?: string;
       skip?: number;

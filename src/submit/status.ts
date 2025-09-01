@@ -46,7 +46,7 @@ export type SubmitStatus =
   | SubmitRunning
   | SubmitComplete;
 
-export module SubmitStatus {
+export namespace SubmitStatus {
   export const waiting = () =>
     ({
       type: 'WAITING',

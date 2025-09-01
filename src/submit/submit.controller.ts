@@ -1,5 +1,5 @@
 import { TypedBody, TypedParam, TypedQuery, TypedRoute } from '@nestia/core';
-import { Body, Controller, ForbiddenException } from '@nestjs/common';
+import { Controller, ForbiddenException } from '@nestjs/common';
 
 import { JwtPayload } from '../jwt/jwt.service';
 import { Roles } from '../jwt/roles.decorator';
@@ -10,8 +10,8 @@ import { bigint } from '../util/bigint';
 import { SubmitStatus } from './status';
 import { SubmitService } from './submit.service';
 
-export module SubmitController {
-  export module list {
+export namespace SubmitController {
+  export namespace list {
     export type Query = {
       skip?: number;
       take?: 20;
@@ -32,7 +32,7 @@ export module SubmitController {
     };
   }
 
-  export module manageList {
+  export namespace manageList {
     export type Query = {
       searchId?: string;
       userId?: string;
@@ -67,7 +67,7 @@ export module SubmitController {
     };
   }
 
-  export module get {
+  export namespace get {
     export type Response = {
       submit: {
         id: string;
@@ -83,7 +83,7 @@ export module SubmitController {
     };
   }
 
-  export module manageGet {
+  export namespace manageGet {
     export type Response = {
       submit: {
         user: {
@@ -104,7 +104,7 @@ export module SubmitController {
     };
   }
 
-  export module create {
+  export namespace create {
     export type Body = {
       problemId: string;
       language: Language;
@@ -119,7 +119,7 @@ export module SubmitController {
   }
 }
 
-export module ManageJudge {
+export namespace ManageJudge {
   export type Body = {
     problemId: string;
     code: string;
