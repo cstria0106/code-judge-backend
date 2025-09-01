@@ -11,7 +11,7 @@ import { AwsSdkModule } from 'aws-sdk-v3-nest';
       clientType: S3Client,
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => {
-        const endpoint = config.get<string>('AWS_ENDPOINT');
+        const endpoint = config.get<string>('AWS_S3_ENDPOINT');
         const region = config.get<string>('AWS_REGION', 'ap-northeast-2');
         const id = config.getOrThrow<string>('AWS_ACCESS_KEY_ID');
         const secret = config.getOrThrow<string>('AWS_SECRET_ACCESS_KEY');

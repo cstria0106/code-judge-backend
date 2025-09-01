@@ -1,9 +1,8 @@
 import {
   CreateBucketCommand,
   DeleteObjectCommand,
-  FilterRuleName,
   GetObjectCommand,
-  HeadBucketCommand,
+  ListObjectsCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -42,7 +41,9 @@ export class StorageService implements OnModuleInit {
 
   async onModuleInit() {
     try {
-      await this.s3.send(new HeadBucketCommand({ Bucket: this.bucket }));
+      await this.s3.send(
+        new ListObjectsCommand({ Bucket: this.bucket, MaxKeys: 1 }),
+      );
     } catch (e) {
       await this.s3.send(new CreateBucketCommand({ Bucket: this.bucket }));
     }

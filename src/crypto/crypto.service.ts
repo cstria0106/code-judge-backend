@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Buffer } from 'buffer';
 import * as crypto from 'crypto';
 import { promisify } from 'util';
 

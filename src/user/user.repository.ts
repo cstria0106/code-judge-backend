@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { ensure } from '../util/ensure';
-import { StringChainable } from 'ts-pattern/dist/types/Pattern';
 
 export module UserRepository {
   export type Criteria = {
@@ -13,8 +12,8 @@ export module UserRepository {
     export type User = {
       name: string;
       id: string;
-      password: Buffer;
-      salt: Buffer;
+      password: Uint8Array;
+      salt: Uint8Array;
       shouldChangePassword: boolean;
       role: 'STUDENT' | 'ADMIN';
     };
@@ -24,8 +23,8 @@ export module UserRepository {
     export type User = {
       name: string;
       id: string;
-      role: 'STUDENT' | 'ADMIN'
-    }
+      role: 'STUDENT' | 'ADMIN';
+    };
 
     export type Options = {
       cursor?: {
@@ -51,12 +50,12 @@ export module UserRepository {
       users: {
         name: string;
         id: string;
-        password: Buffer,
+        password: Buffer;
         salt: Buffer;
         shouldChangePassword: boolean;
         role: 'STUDENT' | 'ADMIN';
-      }[]
-    }
+      }[];
+    };
   }
 
   export module update {
@@ -72,7 +71,7 @@ export module UserRepository {
 
 @Injectable()
 export class UserRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOne(
     criteria: UserRepository.Criteria,
@@ -88,22 +87,26 @@ export class UserRepository {
     return this.findOne(criteria).then(ensure('User'));
   }
 
-  async findMany(options: UserRepository.findMany.Options): Promise<UserRepository.findMany.User[]> {
+  async findMany(
+    options: UserRepository.findMany.Options,
+  ): Promise<UserRepository.findMany.User[]> {
     return this.prisma.user.findMany({
       orderBy: {
-        id: 'asc'
+        id: 'asc',
       },
       skip: options.cursor !== undefined ? 1 : 0,
-      cursor: options.cursor ? {
-        id: options.cursor.id,
-      } : undefined,
+      cursor: options.cursor
+        ? {
+            id: options.cursor.id,
+          }
+        : undefined,
       take: options.take,
       select: {
         id: true,
         name: true,
         role: true,
-      }
-    })
+      },
+    });
   }
 
   async createOne(data: UserRepository.createOne.Data): Promise<void> {
@@ -113,7 +116,7 @@ export class UserRepository {
   }
 
   async createMany(data: UserRepository.createMany.Data): Promise<void> {
-    await this.prisma.user.createMany({ data: data.users })
+    await this.prisma.user.createMany({ data: data.users });
   }
 
   async update(
@@ -126,9 +129,9 @@ export class UserRepository {
       data: {
         ...(password !== undefined
           ? {
-            password: password.encrypted,
-            salt: password.salt,
-          }
+              password: password.encrypted,
+              salt: password.salt,
+            }
           : undefined),
         ...rest,
       },
@@ -136,6 +139,6 @@ export class UserRepository {
   }
 
   async delete(criteria: UserRepository.Criteria): Promise<void> {
-    await this.prisma.user.delete({ where: criteria })
+    await this.prisma.user.delete({ where: criteria });
   }
 }

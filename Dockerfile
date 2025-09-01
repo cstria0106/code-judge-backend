@@ -12,6 +12,8 @@ FROM node:18-alpine AS RUN
 ENV NODE_ENV production
 WORKDIR /app
 
+RUN apk add --no-cache openssl
+
 RUN npm install -g pnpm prisma
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --prod --ignore-scripts

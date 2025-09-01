@@ -35,7 +35,7 @@ export class AuthService {
 
     const [encryptedPassword, _] = await this.crypto.encrypt(
       password,
-      user.salt,
+      Buffer.from(user.salt),
     );
     if (encryptedPassword.compare(user.password) !== 0) {
       throw new BadRequestException('Invalid username or password');
