@@ -1,7 +1,7 @@
 services:
   app:
     container_name: code-judge-backend
-    image: code-judge-backend
+    image: ghcr.io/cstria0106/code-judge-backend
     build:
       context: .
       dockerfile: Dockerfile
