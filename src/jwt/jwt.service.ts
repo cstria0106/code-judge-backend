@@ -23,6 +23,6 @@ export class JwtService {
   }
 
   decode(token: string): JwtPayload {
-    return typia.assertPrune<JwtPayload>(jwt.verify(token, this.secret));
+    return typia.misc.assertPrune<JwtPayload>(jwt.verify(token, this.secret));
   }
 }

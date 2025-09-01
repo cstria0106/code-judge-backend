@@ -123,7 +123,7 @@ export class SubmitGateway {
             }))
             .exhaustive(),
         ),
-        map((e) => typia.assertPrune(e)),
+        map((e) => typia.misc.assertPrune(e)),
       ),
     );
   }

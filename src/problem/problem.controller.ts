@@ -1,10 +1,5 @@
 import { TypedBody, TypedParam, TypedQuery, TypedRoute } from '@nestia/core';
-import {
-  BadRequestException,
-  Controller,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Controller, NotFoundException } from '@nestjs/common';
 import { Language } from 'highlight.js';
 
 import { JwtPayload } from '../jwt/jwt.service';
@@ -127,7 +122,7 @@ export class ProblemController {
   @Roles(['ADMIN'])
   @TypedRoute.Get('manage/:id')
   async manageGet(
-    @TypedParam('id', 'string') id: string,
+    @TypedParam('id') id: string,
   ): Promise<ProblemController.manageGet.Response> {
     return this.problem.manageGet(bigint(id, 'id')).then((result) => ({
       problem: {
@@ -164,7 +159,7 @@ export class ProblemController {
   @Roles(['ADMIN'])
   @TypedRoute.Put('manage/:id')
   async manageUpdate(
-    @TypedParam('id', 'string') id: string,
+    @TypedParam('id') id: string,
     @TypedBody() body: ProblemController.manageUpdate.Body,
   ): Promise<void> {
     await this.problem.manageUpdate(bigint(id, 'id'), {
@@ -183,7 +178,7 @@ export class ProblemController {
 
   @Roles(['ADMIN'])
   @TypedRoute.Delete('manage/:id')
-  async manageDestroy(@TypedParam('id', 'string') id: string) {
+  async manageDestroy(@TypedParam('id') id: string) {
     await this.problem.manageDestroy(bigint(id, 'id'));
   }
 
@@ -208,7 +203,7 @@ export class ProblemController {
   @TypedRoute.Get(':id')
   async get(
     @User() user: JwtPayload,
-    @TypedParam('id', 'string') id: string,
+    @TypedParam('id') id: string,
   ): Promise<ProblemController.get.Response> {
     const problem = await this.problem
       .get(bigint(id, 'id'))

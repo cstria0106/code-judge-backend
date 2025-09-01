@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 @Global()
 @Module({
   imports: [
-    RabbitMQModule.forRootAsync(RabbitMQModule, {
+    RabbitMQModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         return {

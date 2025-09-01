@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Docker from 'dockerode';
 import fs from 'fs/promises';
@@ -7,6 +7,7 @@ import MemoryStream from 'memorystream';
 import { mkdirp } from 'mkdirp';
 import PQueue from 'p-queue-compat';
 import path from 'path';
+import { PassThrough } from 'stream';
 import tar from 'tar';
 import typia from 'typia';
 
@@ -158,9 +159,10 @@ export class CompilerService {
         }
       }
     }
-
     // Save to container
-    await container.putArchive(tar.c({ C: tmp }, files), {
+    const pack = tar.c({ C: tmp }, files);
+    const packStream = pack.pipe(new PassThrough());
+    await container.putArchive(packStream, {
       path: '/app',
     });
 
