@@ -8,7 +8,7 @@ import { mkdirp } from 'mkdirp';
 import PQueue from 'p-queue-compat';
 import path from 'path';
 import { PassThrough } from 'stream';
-import tar from 'tar';
+import * as tar from 'tar';
 import typia from 'typia';
 
 import { languages } from '../language/languages';
